@@ -1,0 +1,63 @@
+@page
+@model OMS.Pages.Orders.DeleteModel
+@{
+    ViewData["Title"] = "Xác nhận xóa Đơn hàng";
+}
+
+<div class="glass-card" style="max-width: 650px; margin: 0 auto; border-top: 4px solid var(--danger);">
+    <div class="mb-4" style="text-align: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 64px; height: 64px; color: var(--danger); margin-bottom: 15px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+        <h1 class="page-title">Xác nhận xóa Đơn hàng</h1>
+        <p style="color: #ff6b6b; font-weight: 500;">Hành động này không thể hoàn tác. Bạn có chắc muốn xóa đơn hàng này khỏi cơ sở dữ liệu?</p>
+    </div>
+
+    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 20px; margin-bottom: 30px; border: 1px solid var(--border-color);">
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 10px; font-size: 0.95rem;">
+            <div style="color: var(--text-muted);">Mã đơn hàng:</div>
+            <div style="font-family: monospace; color: #00f2fe; font-weight: 600;">@Model.Order.Id</div>
+
+            <div style="color: var(--text-muted);">Ngày đặt:</div>
+            <div>@(Model.Order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</div>
+
+            <div style="color: var(--text-muted);">Khách hàng:</div>
+            <div style="font-weight: 600;">@Model.Order.CustomerName (@Model.Order.PhoneNumber)</div>
+
+            <div style="color: var(--text-muted);">Sản phẩm:</div>
+            <div>
+                <strong style="color: #00f2fe; font-family: monospace;">@Model.Order.Code</strong> - @Model.Order.ProductName
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Màu: @(Model.Order.Color ?? "-") | Size: @(Model.Order.Size ?? "-") | SL: @Model.Order.Quantity</div>
+            </div>
+
+            <div style="color: var(--text-muted);">Tổng tiền:</div>
+            <div style="font-weight: bold;">@Model.Order.TotalAmount.ToString("N0") ₫</div>
+
+            <div style="color: var(--text-muted);">Đặt cọc:</div>
+            <div style="color: var(--success);">@Model.Order.Deposit.ToString("N0") ₫</div>
+
+            <div style="color: var(--text-muted);">Còn lại:</div>
+            <div style="color: var(--warning); font-weight: bold;">@Model.Order.RemainingAmount.ToString("N0") ₫</div>
+
+            <div style="color: var(--text-muted);">Lợi nhuận dự tính:</div>
+            <div style="color: var(--success); font-weight: bold;">@Model.Order.Profit.ToString("N0") ₫</div>
+
+            <div style="color: var(--text-muted);">Trạng thái:</div>
+            <div>
+                <span class="status-badge" style="background: rgba(255,255,255,0.05); color: #ffffff; border: 1px solid rgba(255,255,255,0.1);">
+                    @Model.Order.Status
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" style="display: flex; gap: 15px; justify-content: center;">
+        <input type="hidden" asp-for="Order.Id" />
+        <a href="/Orders" class="btn-secondary-premium" style="min-width: 120px; text-align: center;">
+            Hủy
+        </a>
+        <button type="submit" class="btn-danger-premium" style="min-width: 120px; justify-content: center;">
+            Xác nhận xóa
+        </button>
+    </form>
+</div>

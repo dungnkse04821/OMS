@@ -1,0 +1,44 @@
+@page
+@model OMS.Pages.Customers.DeleteModel
+@{
+    ViewData["Title"] = "Xác nhận xóa Khách hàng";
+}
+
+<div class="glass-card" style="max-width: 600px; margin: 0 auto; border-top: 4px solid var(--danger);">
+    <div class="mb-4" style="text-align: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 64px; height: 64px; color: var(--danger); margin-bottom: 15px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+        <h1 class="page-title">Xác nhận xóa Khách hàng</h1>
+        <p style="color: #ff6b6b; font-weight: 500;">Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa khách hàng này?</p>
+    </div>
+
+    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 20px; margin-bottom: 30px; border: 1px solid var(--border-color);">
+        <div style="display: grid; grid-template-columns: 120px 1fr; gap: 10px; font-size: 0.95rem;">
+            <div style="color: var(--text-muted);">Mã khách hàng:</div>
+            <div style="font-family: monospace; color: #00f2fe; font-weight: 600;">@Model.Customer.Id</div>
+
+            <div style="color: var(--text-muted);">Họ và tên:</div>
+            <div style="font-weight: 600;">@Model.Customer.FullName</div>
+
+            <div style="color: var(--text-muted);">Số điện thoại:</div>
+            <div>@Model.Customer.PhoneNumber</div>
+
+            <div style="color: var(--text-muted);">Địa chỉ:</div>
+            <div>@Model.Customer.Address</div>
+
+            <div style="color: var(--text-muted);">Reference:</div>
+            <div>@(Model.Customer.Reference ?? "-")</div>
+        </div>
+    </div>
+
+    <form method="post" style="display: flex; gap: 15px; justify-content: center;">
+        <input type="hidden" asp-for="Customer.Id" />
+        <a href="/Customers" class="btn-secondary-premium" style="min-width: 120px; text-align: center;">
+            Hủy
+        </a>
+        <button type="submit" class="btn-danger-premium" style="min-width: 120px; justify-content: center;">
+            Xác nhận xóa
+        </button>
+    </form>
+</div>

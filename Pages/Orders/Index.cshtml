@@ -1,0 +1,270 @@
+@page
+@model OMS.Pages.Orders.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng";
+}
+
+<div class="glass-card">
+    <div class="d-flex justify-content-between align-items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h1 class="page-title">Quản lý Đơn hàng</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Theo dõi trạng thái, tính toán dòng tiền, lãi lỗ đơn hàng chi tiết</p>
+        </div>
+        <a href="/Orders/Create" class="btn-premium">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Tạo đơn hàng mới
+        </a>
+    </div>
+
+    <!-- Quick Status Filters Widget -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 24px; gap: 12px;">
+        <a href="/Orders" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(string.IsNullOrEmpty(Model.StatusFilter) ? "#00f2fe" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem;">Tất cả</span>
+                <span class="stat-value" style="font-size: 1.25rem;">@Model.TotalCount</span>
+            </div>
+        </a>
+        <a href="/Orders?StatusFilter=Chờ đặt" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Chờ đặt" ? "var(--warning)" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem; color: var(--warning);">Chờ đặt</span>
+                <span class="stat-value" style="font-size: 1.25rem; color: var(--warning);">@Model.PendingCount</span>
+            </div>
+        </a>
+        <a href="/Orders?StatusFilter=Đã đặt" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đã đặt" ? "var(--purple)" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem; color: var(--purple);">Đã đặt</span>
+                <span class="stat-value" style="font-size: 1.25rem; color: var(--purple);">@Model.OrderedCount</span>
+            </div>
+        </a>
+        <a href="/Orders?StatusFilter=Đang về" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đang về" ? "var(--info)" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem; color: var(--info);">Đang về</span>
+                <span class="stat-value" style="font-size: 1.25rem; color: var(--info);">@Model.ShippingCount</span>
+            </div>
+        </a>
+        <a href="/Orders?StatusFilter=Đã về" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đã về" ? "#00f2fe" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem; color: #00f2fe;">Đã về</span>
+                <span class="stat-value" style="font-size: 1.25rem; color: #00f2fe;">@Model.ArrivedCount</span>
+            </div>
+        </a>
+        <a href="/Orders?StatusFilter=Đã giao" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đã giao" ? "var(--success)" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem; color: var(--success);">Đã giao</span>
+                <span class="stat-value" style="font-size: 1.25rem; color: var(--success);">@Model.DeliveredCount</span>
+            </div>
+        </a>
+        <a href="/Orders?StatusFilter=Hủy" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Hủy" ? "var(--danger)" : "var(--border-color)")">
+            <div class="stat-info">
+                <span class="stat-label" style="font-size: 0.75rem; color: var(--danger);">Hủy</span>
+                <span class="stat-value" style="font-size: 1.25rem; color: var(--danger);">@Model.CancelledCount</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Search / Search bar -->
+    <form method="get" class="filter-bar" style="margin-bottom: 24px;">
+        <input type="hidden" name="StatusFilter" value="@Model.StatusFilter" />
+        <div class="filter-item" style="display: flex; gap: 10px;">
+            <input type="text" asp-for="SearchQuery" class="form-input" placeholder="Tìm kiếm theo mã đơn, khách hàng, số điện thoại, SKU..." style="flex-grow: 1;" />
+            <button type="submit" class="btn-secondary-premium" style="padding: 12px 20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+                </svg>
+                Tìm
+            </button>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery) || !string.IsNullOrEmpty(Model.StatusFilter))
+            {
+                <a href="/Orders" class="btn-secondary-premium" style="padding: 12px 20px; display: inline-flex; align-items: center; justify-content: center;">Đặt lại</a>
+            }
+        </div>
+    </form>
+
+    <!-- Desktop View (Responsive Table) -->
+    <div class="d-none d-md-table table-responsive" style="width: 100%;">
+        @if (Model.Orders.Count == 0)
+        {
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Không tìm thấy đơn hàng nào.
+            </div>
+        }
+        else
+        {
+            <table class="custom-table" style="font-size: 0.88rem;">
+                <thead>
+                    <tr>
+                        <th>Mã ĐH</th>
+                        <th>Ngày đặt</th>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm</th>
+                        <th style="text-align: right;">SL</th>
+                        <th style="text-align: right;">Giá bán</th>
+                        <th style="text-align: right;">Tổng tiền</th>
+                        <th style="text-align: right;">Đã cọc</th>
+                        <th style="text-align: right;">Còn lại</th>
+                        <th style="text-align: right;">Lãi</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        string badgeClass = order.Status switch
+                        {
+                            "Chờ đặt" => "pending",
+                            "Đã đặt" => "ordered",
+                            "Đang về" => "shipping",
+                            "Đã về" => "arrived",
+                            "Đã giao" => "delivered",
+                            "Hủy" => "cancelled",
+                            _ => "pending"
+                        };
+
+                        <tr>
+                            <td style="font-family: monospace; color: #00f2fe; font-weight: 600;">@order.Id</td>
+                            <td>@(order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td>
+                                <div style="font-weight: 600;">@order.CustomerName</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">@order.PhoneNumber</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #00f2fe; font-family: monospace; font-size: 0.8rem;">@order.Code</div>
+                                <div>@order.ProductName</div>
+                                @if (!string.IsNullOrEmpty(order.Color) || !string.IsNullOrEmpty(order.Size))
+                                {
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                        @(order.Color ?? "-") / @(order.Size ?? "-")
+                                    </div>
+                                }
+                            </td>
+                            <td style="text-align: right;">@order.Quantity</td>
+                            <td style="text-align: right;">@order.SellingPrice.ToString("N0") ₫</td>
+                            <td style="text-align: right; font-weight: 600;">@order.TotalAmount.ToString("N0") ₫</td>
+                            <td style="text-align: right; color: var(--success);">@order.Deposit.ToString("N0") ₫</td>
+                            <td style="text-align: right; color: @(order.RemainingAmount > 0 ? "var(--warning)" : "var(--text-muted)"); font-weight: @(order.RemainingAmount > 0 ? "600" : "400");">
+                                @order.RemainingAmount.ToString("N0") ₫
+                            </td>
+                            <td style="text-align: right; color: @(order.Profit >= 0 ? "#00f2fe" : "var(--danger)"); font-weight: 600;">
+                                @order.Profit.ToString("N0") ₫
+                            </td>
+                            <td>
+                                <span class="status-badge @badgeClass">@order.Status</span>
+                            </td>
+                            <td>
+                                <div class="action-btn-group" style="justify-content: flex-end;">
+                                    <a href="/Orders/Edit?id=@order.Id" class="action-btn edit" title="Sửa">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                        </svg>
+                                    </a>
+                                    <a href="/Orders/Delete?id=@order.Id" class="action-btn delete" title="Xóa">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-1.8c0-.621-.504-1.125-1.125-1.125h-2.25c-.621 0-1.125.504-1.125 1.125v1.8M8.25 6.75h7.5" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- Mobile View (Responsive Cards List) -->
+    <div class="d-md-none mobile-card-list">
+        @if (Model.Orders.Count == 0)
+        {
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Không tìm thấy đơn hàng nào.
+            </div>
+        }
+        else
+        {
+            @foreach (var order in Model.Orders)
+            {
+                string badgeClass = order.Status switch
+                {
+                    "Chờ đặt" => "pending",
+                    "Đã đặt" => "ordered",
+                    "Đang về" => "shipping",
+                    "Đã về" => "arrived",
+                    "Đã giao" => "delivered",
+                    "Hủy" => "cancelled",
+                    _ => "pending"
+                };
+
+                <div class="mobile-data-card">
+                    <div class="mobile-card-header">
+                        <div>
+                            <span class="mobile-card-title">@order.CustomerName</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">@order.PhoneNumber</span>
+                        </div>
+                        <span class="status-badge @badgeClass">@order.Status</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div>
+                            <span class="mobile-card-label">Mã đơn hàng:</span>
+                            <span class="mobile-card-value" style="font-family: monospace;">@order.Id</span>
+                        </div>
+                        <div>
+                            <span class="mobile-card-label">Ngày đặt:</span>
+                            <span class="mobile-card-value">@(order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</span>
+                        </div>
+                        <div style="grid-column: span 2; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
+                            <div style="font-weight: bold; color: #00f2fe; font-family: monospace;">@order.Code</div>
+                            <div style="font-weight: 500; font-size: 0.85rem;">@order.ProductName</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Màu: @(order.Color ?? "-") | Size: @(order.Size ?? "-") | SL: @order.Quantity</div>
+                        </div>
+                        <div>
+                            <span class="mobile-card-label">Tổng tiền:</span>
+                            <span class="mobile-card-value" style="font-weight: bold;">@order.TotalAmount.ToString("N0") ₫</span>
+                        </div>
+                        <div>
+                            <span class="mobile-card-label">Đã cọc:</span>
+                            <span class="mobile-card-value" style="color: var(--success); font-weight: 500;">@order.Deposit.ToString("N0") ₫</span>
+                        </div>
+                        <div>
+                            <span class="mobile-card-label">Còn lại:</span>
+                            <span class="mobile-card-value" style="color: @(order.RemainingAmount > 0 ? "var(--warning)" : "var(--text-muted)"); font-weight: bold;">@order.RemainingAmount.ToString("N0") ₫</span>
+                        </div>
+                        <div>
+                            <span class="mobile-card-label">Lợi nhuận:</span>
+                            <span class="mobile-card-value" style="color: #00f2fe; font-weight: bold;">@order.Profit.ToString("N0") ₫</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-actions">
+                        <a href="/Orders/Edit?id=@order.Id" class="btn-secondary-premium" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>
+                            Sửa
+                        </a>
+                        <a href="/Orders/Delete?id=@order.Id" class="btn-danger-premium" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-1.8c0-.621-.504-1.125-1.125-1.125h-2.25c-.621 0-1.125.504-1.125 1.125v1.8M8.25 6.75h7.5" />
+                            </svg>
+                            Xóa
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<style>
+    @@media (min-width: 768px) {
+        .d-none { display: none !important; }
+        .d-md-table { display: table !important; }
+        .d-md-none { display: none !important; }
+    }
+    @@media (max-width: 767.98px) {
+        .d-none { display: none !important; }
+        .d-md-table { display: none !important; }
+        .d-md-none { display: flex !important; }
+    }
+</style>

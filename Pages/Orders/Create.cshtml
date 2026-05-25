@@ -1,0 +1,303 @@
+@page
+@model OMS.Pages.Orders.CreateModel
+@{
+    ViewData["Title"] = "Tạo Đơn hàng mới";
+}
+
+<div class="glass-card" style="max-width: 1000px; margin: 0 auto;">
+    <div class="mb-4">
+        <h1 class="page-title">Tạo Đơn hàng mới</h1>
+        <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Thiết lập đơn hàng mới. Chọn Khách hàng và Sản phẩm để tự động điền nhanh dữ liệu.</p>
+    </div>
+
+    <form method="post" id="order-form">
+        <!-- 1. Chọn nhanh & Thông tin khách hàng -->
+        <h3 style="color: #00f2fe; margin-bottom: 20px; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">
+            1. Khách hàng
+        </h3>
+        
+        <div class="form-group">
+            <label class="form-label">Chọn khách hàng có sẵn</label>
+            <select id="customer-select" class="form-input">
+                <option value="">-- Chọn khách hàng để điền nhanh --</option>
+                @foreach (var c in Model.Customers)
+                {
+                    <option value="@c.Id">@c.FullName (@c.PhoneNumber)</option>
+                }
+            </select>
+        </div>
+
+        <div class="grid-3">
+            <div class="form-group">
+                <label asp-for="Order.CustomerName" class="form-label"></label>
+                <input asp-for="Order.CustomerName" id="order-customer-name" class="form-input" placeholder="Tên khách hàng..." />
+                <span asp-validation-for="Order.CustomerName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.PhoneNumber" class="form-label"></label>
+                <input asp-for="Order.PhoneNumber" id="order-phone" class="form-input" placeholder="Số điện thoại..." />
+                <span asp-validation-for="Order.PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.ShippingAddress" class="form-label"></label>
+                <input asp-for="Order.ShippingAddress" id="order-address" class="form-input" placeholder="Địa chỉ giao hàng..." />
+                <span asp-validation-for="Order.ShippingAddress" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- 2. Chọn nhanh & Thông tin sản phẩm -->
+        <h3 style="color: #00f2fe; margin: 30px 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">
+            2. Sản phẩm & Chi tiết
+        </h3>
+
+        <div class="form-group">
+            <label class="form-label">Chọn sản phẩm có sẵn (SKU)</label>
+            <select id="product-select" class="form-input">
+                <option value="">-- Chọn sản phẩm để điền nhanh --</option>
+                @foreach (var p in Model.Products)
+                {
+                    <option value="@p.Sku">@p.Sku - @p.Name (@p.SellingPrice.ToString("N0") ₫)</option>
+                }
+            </select>
+        </div>
+
+        <div class="grid-3">
+            <div class="form-group">
+                <label asp-for="Order.Code" class="form-label"></label>
+                <input asp-for="Order.Code" id="order-sku" class="form-input" placeholder="Mã SKU sản phẩm..." />
+                <span asp-validation-for="Order.Code" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.ProductName" class="form-label"></label>
+                <input asp-for="Order.ProductName" id="order-product-name" class="form-input" placeholder="Tên sản phẩm..." />
+                <span asp-validation-for="Order.ProductName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Category" class="form-label"></label>
+                <input asp-for="Order.Category" id="order-category" class="form-input" placeholder="Danh mục..." />
+                <span asp-validation-for="Order.Category" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label asp-for="Order.Color" class="form-label"></label>
+                <input asp-for="Order.Color" class="form-input" placeholder="Ví dụ: Đen, Trắng..." />
+                <span asp-validation-for="Order.Color" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Size" class="form-label"></label>
+                <input asp-for="Order.Size" class="form-input" placeholder="Ví dụ: S, M, L, XL..." />
+                <span asp-validation-for="Order.Size" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div class="form-group">
+                <label asp-for="Order.Source" class="form-label"></label>
+                <input asp-for="Order.Source" id="order-source" class="form-input" placeholder="Nguồn hàng..." />
+                <span asp-validation-for="Order.Source" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Warehouse" class="form-label"></label>
+                <input asp-for="Order.Warehouse" id="order-warehouse" class="form-input" placeholder="Kho hàng..." />
+                <span asp-validation-for="Order.Warehouse" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Status" class="form-label"></label>
+                <select asp-for="Order.Status" class="form-input">
+                    @foreach (var status in OMS.Models.OrderStatusList.All)
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+                <span asp-validation-for="Order.Status" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- 3. Giá & Dòng tiền -->
+        <h3 style="color: #00f2fe; margin: 30px 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">
+            3. Dòng tiền & Định phí (Tự động tính toán)
+        </h3>
+
+        <div class="grid-3">
+            <div class="form-group">
+                <label asp-for="Order.SellingPrice" class="form-label"></label>
+                <input asp-for="Order.SellingPrice" type="number" step="any" id="order-selling-price" class="form-input calc-trigger" placeholder="0" />
+                <span asp-validation-for="Order.SellingPrice" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Quantity" class="form-label"></label>
+                <input asp-for="Order.Quantity" type="number" id="order-quantity" class="form-input calc-trigger" placeholder="1" />
+                <span asp-validation-for="Order.Quantity" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.ImportPrice" class="form-label"></label>
+                <input asp-for="Order.ImportPrice" type="number" step="any" id="order-import-price" class="form-input calc-trigger" placeholder="0" />
+                <span asp-validation-for="Order.ImportPrice" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label asp-for="Order.Deposit" class="form-label"></label>
+                <input asp-for="Order.Deposit" type="number" step="any" id="order-deposit" class="form-input calc-trigger" placeholder="0" />
+                <span asp-validation-for="Order.Deposit" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.Discount" class="form-label"></label>
+                <input asp-for="Order.Discount" type="number" step="any" id="order-discount" class="form-input calc-trigger" placeholder="0" />
+                <span asp-validation-for="Order.Discount" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Real-time dynamic calc results -->
+        <div style="background: rgba(0, 242, 254, 0.04); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 12px; padding: 20px; margin-top: 24px;">
+            <div class="grid-3" style="text-align: center;">
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Tổng số tiền</div>
+                    <div id="calc-total" style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin-top: 4px;">0 ₫</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Còn lại phải thu</div>
+                    <div id="calc-remaining" style="font-size: 1.5rem; font-weight: 700; color: var(--warning); margin-top: 4px;">0 ₫</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Lợi nhuận dự tính</div>
+                    <div id="calc-profit" style="font-size: 1.5rem; font-weight: 700; color: var(--success); margin-top: 4px;">0 ₫</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Lịch trình -->
+        <h3 style="color: #00f2fe; margin: 30px 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">
+            4. Lịch trình & Giao nhận
+        </h3>
+        
+        <div class="grid-3">
+            <div class="form-group">
+                <label asp-for="Order.OrderDate" class="form-label"></label>
+                <input asp-for="Order.OrderDate" type="date" class="form-input" />
+                <span asp-validation-for="Order.OrderDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.ArrivalDate" class="form-label"></label>
+                <input asp-for="Order.ArrivalDate" type="date" class="form-input" />
+                <span asp-validation-for="Order.ArrivalDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.PaymentDate" class="form-label"></label>
+                <input asp-for="Order.PaymentDate" type="date" class="form-input" />
+                <span asp-validation-for="Order.PaymentDate" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Form Submit & Cancel Actions -->
+        <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 40px; flex-wrap: wrap;">
+            <a href="/Orders" class="btn-secondary-premium">
+                Hủy
+            </a>
+            <button type="submit" class="btn-premium">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Tạo đơn hàng
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Inject customer and product data from server model
+        const customers = @Html.Raw(Model.CustomersJson);
+        const products = @Html.Raw(Model.ProductsJson);
+
+        const customerSelect = document.getElementById('customer-select');
+        const productSelect = document.getElementById('product-select');
+
+        // Customer selection change
+        customerSelect.addEventListener('change', function() {
+            const customerId = this.value;
+            if (!customerId) return;
+
+            const selected = customers.find(c => c.Id === customerId);
+            if (selected) {
+                document.getElementById('order-customer-name').value = selected.FullName;
+                document.getElementById('order-phone').value = selected.PhoneNumber;
+                document.getElementById('order-address').value = selected.Address;
+            }
+        });
+
+        // Product selection change
+        productSelect.addEventListener('change', function() {
+            const productSku = this.value;
+            if (!productSku) return;
+
+            const selected = products.find(p => p.Sku === productSku);
+            if (selected) {
+                document.getElementById('order-sku').value = selected.Sku;
+                document.getElementById('order-product-name').value = selected.Name;
+                document.getElementById('order-category').value = selected.Category;
+                document.getElementById('order-source').value = selected.Source;
+                document.getElementById('order-warehouse').value = selected.Warehouse;
+                document.getElementById('order-selling-price').value = selected.SellingPrice;
+                document.getElementById('order-import-price').value = selected.ImportPrice;
+                
+                // Trigger calculation update
+                calculateOrderFinance();
+            }
+        });
+
+        // Financial Calculation Logic
+        const calcTriggers = document.querySelectorAll('.calc-trigger');
+        calcTriggers.forEach(input => {
+            input.addEventListener('input', calculateOrderFinance);
+        });
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val).replace('₫', '₫');
+        }
+
+        function calculateOrderFinance() {
+            const sellingPrice = parseFloat(document.getElementById('order-selling-price').value) || 0;
+            const quantity = parseInt(document.getElementById('order-quantity').value) || 0;
+            const importPrice = parseFloat(document.getElementById('order-import-price').value) || 0;
+            const deposit = parseFloat(document.getElementById('order-deposit').value) || 0;
+            const discount = parseFloat(document.getElementById('order-discount').value) || 0;
+
+            const totalAmount = sellingPrice * quantity;
+            const remainingAmount = totalAmount - deposit - discount;
+            const totalImportCost = importPrice * quantity;
+            const profit = totalAmount - totalImportCost;
+
+            document.getElementById('calc-total').innerText = formatCurrency(totalAmount);
+            document.getElementById('calc-remaining').innerText = formatCurrency(remainingAmount);
+            
+            const profitEl = document.getElementById('calc-profit');
+            profitEl.innerText = formatCurrency(profit);
+            if (profit >= 0) {
+                profitEl.style.color = 'var(--success)';
+            } else {
+                profitEl.style.color = 'var(--danger)';
+            }
+        }
+
+        // Run calculation once on page load
+        calculateOrderFinance();
+    </script>
+}

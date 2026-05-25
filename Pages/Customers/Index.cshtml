@@ -1,0 +1,158 @@
+@page
+@model OMS.Pages.Customers.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Khách hàng";
+}
+
+<div class="glass-card">
+    <div class="d-flex justify-content-between align-items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h1 class="page-title">Quản lý Khách hàng</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Danh sách thông tin liên hệ và lịch sử khách hàng</p>
+        </div>
+        <a href="/Customers/Create" class="btn-premium">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Thêm khách hàng
+        </a>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <form method="get" class="filter-bar" style="margin-bottom: 24px;">
+        <div class="filter-item" style="display: flex; gap: 10px;">
+            <input type="text" asp-for="SearchQuery" class="form-input" placeholder="Tìm tên, số điện thoại, reference..." style="flex-grow: 1;" />
+            <button type="submit" class="btn-secondary-premium" style="padding: 12px 20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+                </svg>
+                Tìm
+            </button>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <a href="/Customers" class="btn-secondary-premium" style="padding: 12px 20px; display: inline-flex; align-items: center; justify-content: center;">Đặt lại</a>
+            }
+        </div>
+    </form>
+
+    <!-- Desktop View (Hidden on mobile) -->
+    <div class="d-none d-md-table table-responsive" style="width: 100%;">
+        @if (Model.Customers.Count == 0)
+        {
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Không tìm thấy khách hàng nào.
+            </div>
+        }
+        else
+        {
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Mã KH</th>
+                        <th>Họ và tên</th>
+                        <th>Số điện thoại</th>
+                        <th>Reference</th>
+                        <th>Địa chỉ</th>
+                        <th>Ghi chú</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var customer in Model.Customers)
+                    {
+                        <tr>
+                            <td style="font-family: monospace; color: #00f2fe;">@customer.Id</td>
+                            <td style="font-weight: 600;">@customer.FullName</td>
+                            <td>@customer.PhoneNumber</td>
+                            <td>@(customer.Reference ?? "-")</td>
+                            <td>@customer.Address</td>
+                            <td style="color: var(--text-muted); font-size: 0.9rem;">@(customer.Note ?? "-")</td>
+                            <td>
+                                <div class="action-btn-group" style="justify-content: flex-end;">
+                                    <a href="/Customers/Edit?id=@customer.Id" class="action-btn edit" title="Sửa">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                        </svg>
+                                    </a>
+                                    <a href="/Customers/Delete?id=@customer.Id" class="action-btn delete" title="Xóa">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-1.8c0-.621-.504-1.125-1.125-1.125h-2.25c-.621 0-1.125.504-1.125 1.125v1.8M8.25 6.75h7.5" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- Mobile View (Hidden on desktop) -->
+    <div class="d-md-none mobile-card-list">
+        @if (Model.Customers.Count == 0)
+        {
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Không tìm thấy khách hàng nào.
+            </div>
+        }
+        else
+        {
+            @foreach (var customer in Model.Customers)
+            {
+                <div class="mobile-data-card">
+                    <div class="mobile-card-header">
+                        <span class="mobile-card-title" style="color: #00f2fe;">@customer.FullName</span>
+                        <span style="font-family: monospace; font-size: 0.8rem; color: var(--text-muted);">@customer.Id</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div>
+                            <span class="mobile-card-label">Số điện thoại:</span>
+                            <span class="mobile-card-value">@customer.PhoneNumber</span>
+                        </div>
+                        <div>
+                            <span class="mobile-card-label">Reference:</span>
+                            <span class="mobile-card-value">@(customer.Reference ?? "-")</span>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <span class="mobile-card-label">Địa chỉ:</span>
+                            <span class="mobile-card-value">@customer.Address</span>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <span class="mobile-card-label">Ghi chú:</span>
+                            <span class="mobile-card-value" style="color: var(--text-muted);">@(customer.Note ?? "-")</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-actions">
+                        <a href="/Customers/Edit?id=@customer.Id" class="btn-secondary-premium" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>
+                            Sửa
+                        </a>
+                        <a href="/Customers/Delete?id=@customer.Id" class="btn-danger-premium" style="padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-1.8c0-.621-.504-1.125-1.125-1.125h-2.25c-.621 0-1.125.504-1.125 1.125v1.8M8.25 6.75h7.5" />
+                            </svg>
+                            Xóa
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<style>
+    /* Responsive utility classes for showing/hiding table on desktop vs card list on mobile */
+    @@media (min-width: 768px) {
+        .d-none { display: none !important; }
+        .d-md-table { display: table !important; }
+        .d-md-none { display: none !important; }
+    }
+    @@media (max-width: 767.98px) {
+        .d-none { display: none !important; }
+        .d-md-table { display: none !important; }
+        .d-md-none { display: flex !important; }
+    }
+</style>
