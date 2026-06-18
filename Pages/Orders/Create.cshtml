@@ -17,14 +17,11 @@
         </h3>
         
         <div class="form-group">
-            <label class="form-label">Chọn khách hàng có sẵn</label>
-            <select id="customer-select" class="form-input">
-                <option value="">-- Chọn khách hàng để điền nhanh --</option>
-                @foreach (var c in Model.Customers)
-                {
-                    <option value="@c.Id">@c.FullName (@c.PhoneNumber)</option>
-                }
-            </select>
+            <label class="form-label">Chọn khách hàng có sẵn (Gõ để tìm kiếm)</label>
+            <div class="autocomplete-container" id="customer-autocomplete">
+                <input type="text" id="customer-search-input" class="form-input autocomplete-input" placeholder="Nhập tên hoặc số điện thoại..." autocomplete="off" />
+                <div class="autocomplete-dropdown-list d-none" id="customer-dropdown-list"></div>
+            </div>
         </div>
 
         <div class="grid-3">
@@ -53,14 +50,11 @@
         </h3>
 
         <div class="form-group">
-            <label class="form-label">Chọn sản phẩm có sẵn (SKU)</label>
-            <select id="product-select" class="form-input">
-                <option value="">-- Chọn sản phẩm để điền nhanh --</option>
-                @foreach (var p in Model.Products)
-                {
-                    <option value="@p.Sku">@p.Sku - @p.Name (@p.SellingPrice.ToString("N0") ₫)</option>
-                }
-            </select>
+            <label class="form-label">Chọn sản phẩm có sẵn (Gõ để tìm kiếm theo tên hoặc SKU)</label>
+            <div class="autocomplete-container" id="product-autocomplete">
+                <input type="text" id="product-search-input" class="form-input autocomplete-input" placeholder="Nhập tên hoặc mã SKU sản phẩm..." autocomplete="off" />
+                <div class="autocomplete-dropdown-list d-none" id="product-dropdown-list"></div>
+            </div>
         </div>
 
         <div class="grid-3">
@@ -227,29 +221,165 @@
         const customers = @Html.Raw(Model.CustomersJson);
         const products = @Html.Raw(Model.ProductsJson);
 
-        const customerSelect = document.getElementById('customer-select');
-        const productSelect = document.getElementById('product-select');
+        function initAutocomplete({
+            containerId,
+            inputId,
+            listId,
+            data,
+            searchFields,
+            displayTemplate,
+            displayValue,
+            onSelect
+        }) {
+            const container = document.getElementById(containerId);
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            let activeIndex = -1;
+            let filteredData = [];
 
-        // Customer selection change
-        customerSelect.addEventListener('change', function() {
-            const customerId = this.value;
-            if (!customerId) return;
+            function renderList(items) {
+                list.innerHTML = '';
+                if (items.length === 0) {
+                    const noResult = document.createElement('div');
+                    noResult.className = 'autocomplete-item';
+                    noResult.style.cursor = 'default';
+                    noResult.style.color = 'var(--text-muted)';
+                    noResult.innerText = 'Không tìm thấy kết quả';
+                    list.appendChild(noResult);
+                    return;
+                }
 
-            const selected = customers.find(c => c.Id === customerId);
-            if (selected) {
+                items.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item';
+                    if (index === activeIndex) {
+                        div.classList.add('active');
+                    }
+                    div.innerHTML = displayTemplate(item);
+                    div.addEventListener('click', () => selectItem(item));
+                    list.appendChild(div);
+                });
+            }
+
+            function selectItem(item) {
+                input.value = displayValue(item);
+                onSelect(item);
+                closeList();
+            }
+
+            function closeList() {
+                list.classList.add('d-none');
+                activeIndex = -1;
+            }
+
+            function showList() {
+                list.classList.remove('d-none');
+                filterItems(input.value);
+            }
+
+            function filterItems(query) {
+                const q = query.trim().toLowerCase();
+                if (!q) {
+                    filteredData = data;
+                } else {
+                    filteredData = data.filter(item => {
+                        return searchFields.some(field => {
+                            const val = item[field];
+                            return val && val.toString().toLowerCase().includes(q);
+                        });
+                    });
+                }
+                activeIndex = -1;
+                renderList(filteredData);
+            }
+
+            input.addEventListener('focus', showList);
+
+            input.addEventListener('input', () => {
+                showList();
+            });
+
+            // Keyboard navigation
+            input.addEventListener('keydown', (e) => {
+                if (list.classList.contains('d-none')) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        showList();
+                        e.preventDefault();
+                    }
+                    return;
+                }
+
+                const items = list.querySelectorAll('.autocomplete-item');
+                if (items.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    activeIndex = (activeIndex + 1) % filteredData.length;
+                    renderList(filteredData);
+                    scrollIntoView();
+                    e.preventDefault();
+                } else if (e.key === 'ArrowUp') {
+                    activeIndex = (activeIndex - 1 + filteredData.length) % filteredData.length;
+                    renderList(filteredData);
+                    scrollIntoView();
+                    e.preventDefault();
+                } else if (e.key === 'Enter') {
+                    if (activeIndex >= 0 && activeIndex < filteredData.length) {
+                        selectItem(filteredData[activeIndex]);
+                        e.preventDefault();
+                    }
+                } else if (e.key === 'Escape') {
+                    closeList();
+                    input.blur();
+                    e.preventDefault();
+                }
+            });
+
+            function scrollIntoView() {
+                const activeEl = list.querySelector('.autocomplete-item.active');
+                if (activeEl) {
+                    activeEl.scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            // Close when click outside
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    closeList();
+                }
+            });
+        }
+
+        // Initialize autocompletes
+        initAutocomplete({
+            containerId: 'customer-autocomplete',
+            inputId: 'customer-search-input',
+            listId: 'customer-dropdown-list',
+            data: customers,
+            searchFields: ['FullName', 'PhoneNumber'],
+            displayValue: (item) => `${item.FullName} (${item.PhoneNumber})`,
+            displayTemplate: (item) => `
+                <div class="item-title">${item.FullName}</div>
+                <div class="item-subtitle">${item.PhoneNumber} | ${item.Address}</div>
+            `,
+            onSelect: (selected) => {
                 document.getElementById('order-customer-name').value = selected.FullName;
                 document.getElementById('order-phone').value = selected.PhoneNumber;
                 document.getElementById('order-address').value = selected.Address;
             }
         });
 
-        // Product selection change
-        productSelect.addEventListener('change', function() {
-            const productSku = this.value;
-            if (!productSku) return;
-
-            const selected = products.find(p => p.Sku === productSku);
-            if (selected) {
+        initAutocomplete({
+            containerId: 'product-autocomplete',
+            inputId: 'product-search-input',
+            listId: 'product-dropdown-list',
+            data: products,
+            searchFields: ['Sku', 'Name'],
+            displayValue: (item) => `${item.Sku} - ${item.Name}`,
+            displayTemplate: (item) => `
+                <div class="item-title">${item.Sku} - ${item.Name}</div>
+                <div class="item-subtitle">Giá bán: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.SellingPrice)} | Kho: ${item.Warehouse}</div>
+            `,
+            onSelect: (selected) => {
                 document.getElementById('order-sku').value = selected.Sku;
                 document.getElementById('order-product-name').value = selected.Name;
                 document.getElementById('order-category').value = selected.Category;
@@ -258,7 +388,6 @@
                 document.getElementById('order-selling-price').value = selected.SellingPrice;
                 document.getElementById('order-import-price').value = selected.ImportPrice;
                 
-                // Trigger calculation update
                 calculateOrderFinance();
             }
         });
