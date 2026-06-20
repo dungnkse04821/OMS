@@ -1,0 +1,297 @@
+@page
+@model OMS.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Báo cáo & Thống kê";
+
+    // Month navigation helper
+    var currentMonth = string.IsNullOrEmpty(Model.Month)
+        ? DateTime.Now.ToString("yyyy-MM")
+        : Model.Month;
+    if (!DateTime.TryParseExact(currentMonth, "yyyy-MM", null, System.Globalization.DateTimeStyles.None, out var parsedMonth))
+        parsedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    var prevMonth = parsedMonth.AddMonths(-1).ToString("yyyy-MM");
+    var nextMonth = parsedMonth.AddMonths(1).ToString("yyyy-MM");
+    bool isCurrentMonth = parsedMonth.Year == DateTime.Now.Year && parsedMonth.Month == DateTime.Now.Month;
+}
+
+<div class="glass-card" style="margin-bottom: 24px;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 1.5rem;">
+        <div>
+            <h1 class="page-title">Báo cáo & Thống kê</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Tổng quan doanh thu, lợi nhuận và sản phẩm bán chạy</p>
+        </div>
+        <!-- Month Picker -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <a href="/Reports?month=@prevMonth" class="btn-secondary-premium" style="padding: 8px 12px;" title="Tháng trước">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+            </a>
+            <form method="get" style="display: flex; align-items: center; gap: 6px;">
+                <input type="month" name="month" value="@currentMonth" class="form-input" style="padding: 8px 12px; width: auto;"
+                       onchange="this.form.submit()" />
+            </form>
+            <a href="/Reports?month=@nextMonth" class="btn-secondary-premium" style="padding: 8px 12px;" title="Tháng sau">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+            </a>
+            @if (!isCurrentMonth)
+            {
+                <a href="/Reports" class="btn-secondary-premium" style="padding: 8px 14px; font-size: 0.8rem;">Tháng này</a>
+            }
+        </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="stats-grid" style="margin-bottom: 32px;">
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(0,242,254,0.15), rgba(79,172,254,0.15)); color: #00f2fe; flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Tổng doanh thu</span>
+                    <span class="stat-value" style="color: #00f2fe; font-size: 1.4rem;">@Model.TotalRevenue.ToString("N0") ₫</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,197,94,0.15)); color: var(--success); flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Lợi nhuận gộp</span>
+                    <span class="stat-value" style="color: var(--success); font-size: 1.4rem;">@Model.TotalProfit.ToString("N0") ₫</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(234,88,12,0.15)); color: var(--warning); flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Chi phí vốn</span>
+                    <span class="stat-value" style="color: var(--warning); font-size: 1.4rem;">@Model.TotalCost.ToString("N0") ₫</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(139,92,246,0.15)); color: var(--purple); flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Tổng đơn hàng</span>
+                    <span class="stat-value" style="color: var(--purple); font-size: 1.4rem;">@Model.OrderCount</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Summary Row -->
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px;">
+        <div style="flex: 1; min-width: 140px; text-align: center; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--success);">@Model.DeliveredCount</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Đã giao</div>
+        </div>
+        <div style="flex: 1; min-width: 140px; text-align: center; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--warning);">@Model.PendingCount</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Đang xử lý</div>
+        </div>
+        <div style="flex: 1; min-width: 140px; text-align: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--danger);">@Model.CancelledCount</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Đã hủy</div>
+        </div>
+        <div style="flex: 1; min-width: 140px; text-align: center; background: rgba(0,242,254,0.06); border: 1px solid rgba(0,242,254,0.15); border-radius: 10px; padding: 14px;">
+            <div style="font-size: 1.8rem; font-weight: 700; color: #00f2fe;">@Model.AverageOrderValue.ToString("N0") ₫</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">TB / đơn</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+
+        <!-- Line Chart: Daily Revenue & Profit -->
+        <div class="glass-card" style="padding: 20px;">
+            <h3 style="margin: 0 0 16px; font-size: 1rem; font-weight: 600;">Doanh thu & Lợi nhuận theo ngày — Tháng @Model.DisplayMonth</h3>
+            <div style="position: relative; height: 280px;">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Bar Chart: Top Products -->
+        <div class="glass-card" style="padding: 20px;">
+            <h3 style="margin: 0 0 16px; font-size: 1rem; font-weight: 600;">Top sản phẩm bán chạy (tất cả thời gian)</h3>
+            <div style="position: relative; height: 280px;">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<script>
+(function () {
+    // Global Chart.js defaults for dark theme
+    Chart.defaults.color = 'rgba(255,255,255,0.55)';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+
+    // --- Daily Revenue & Profit Line Chart ---
+    const dailyLabels = @Html.Raw(Model.DailyLabelsJson);
+    const dailyRevenue = @Html.Raw(Model.DailyRevenueJson);
+    const dailyProfit = @Html.Raw(Model.DailyProfitJson);
+
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+
+    // Gradient fills
+    const revGrad = dailyCtx.createLinearGradient(0, 0, 0, 280);
+    revGrad.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+    revGrad.addColorStop(1, 'rgba(0, 242, 254, 0)');
+
+    const profGrad = dailyCtx.createLinearGradient(0, 0, 0, 280);
+    profGrad.addColorStop(0, 'rgba(74, 222, 128, 0.2)');
+    profGrad.addColorStop(1, 'rgba(74, 222, 128, 0)');
+
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [
+                {
+                    label: 'Doanh thu',
+                    data: dailyRevenue,
+                    borderColor: '#00f2fe',
+                    backgroundColor: revGrad,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#00f2fe',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Lợi nhuận',
+                    data: dailyProfit,
+                    borderColor: '#4ade80',
+                    backgroundColor: profGrad,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#4ade80',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { usePointStyle: true, padding: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('vi-VN') + ' ₫';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { maxTicksLimit: 10 }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: {
+                        callback: function (val) {
+                            return (val / 1000000).toFixed(1) + 'M';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // --- Top Products Bar Chart ---
+    const topLabels = @Html.Raw(Model.TopProductLabelsJson);
+    const topQty = @Html.Raw(Model.TopProductQtyJson);
+
+    const topCtx = document.getElementById('topProductsChart').getContext('2d');
+
+    // Bar gradient
+    const barColors = topLabels.map(function(_, i) {
+        const hue = (190 + i * 30) % 360;
+        return `hsla(${hue}, 85%, 65%, 0.75)`;
+    });
+
+    new Chart(topCtx, {
+        type: 'bar',
+        data: {
+            labels: topLabels,
+            datasets: [
+                {
+                    label: 'Số lượng đã bán',
+                    data: topQty,
+                    backgroundColor: barColors,
+                    borderColor: barColors.map(c => c.replace('0.75', '1')),
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ' ' + ctx.parsed.y + ' sản phẩm';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: {
+                        maxRotation: 20,
+                        callback: function(val, idx) {
+                            const label = topLabels[idx];
+                            return label.length > 18 ? label.slice(0, 16) + '…' : label;
+                        }
+                    }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { stepSize: 1 },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+})();
+</script>

@@ -1,0 +1,160 @@
+@page
+@model OMS.Pages.Orders.LogsModel
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng " + Model.Order?.Id;
+}
+
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 1.5rem;">
+        <div>
+            <h1 class="page-title">Lịch sử đơn hàng</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">
+                Nhật ký thay đổi trạng thái — Mã đơn: <span style="color: #00f2fe; font-family: monospace; font-weight: 600;">@Model.Order?.Id</span>
+            </p>
+        </div>
+        <a href="/Orders" class="btn-secondary-premium" style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Quay lại
+        </a>
+    </div>
+
+    @if (Model.Order != null)
+    {
+        <!-- Order Summary -->
+        <div style="background: rgba(0,242,254,0.04); border: 1px solid rgba(0,242,254,0.15); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Khách hàng</div>
+                <div style="font-weight: 600;">@Model.Order.CustomerName</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">@Model.Order.PhoneNumber</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Sản phẩm</div>
+                <div style="font-weight: 600; color: #00f2fe; font-family: monospace; font-size: 0.875rem;">@Model.Order.Code</div>
+                <div style="font-size: 0.875rem;">@Model.Order.ProductName</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Ngày đặt</div>
+                <div style="font-weight: 600;">@(Model.Order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Trạng thái hiện tại</div>
+                @{
+                    string bc = Model.Order.Status switch {
+                        "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
+                        "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
+                    };
+                }
+                <span class="status-badge @bc">@Model.Order.Status</span>
+            </div>
+        </div>
+    }
+
+    <!-- Timeline -->
+    @if (Model.Logs.Count == 0)
+    {
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" style="width:48px;height:48px;opacity:0.3;margin:0 auto 12px;display:block;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p style="font-size:0.95rem;">Chưa có lịch sử thay đổi trạng thái nào.<br><span style="font-size:0.8rem;">Lịch sử sẽ được ghi lại từ lần sửa đơn tiếp theo.</span></p>
+        </div>
+    }
+    else
+    {
+        <div class="audit-timeline">
+            @foreach (var log in Model.Logs)
+            {
+                string fromBc = log.OldStatus switch {
+                    "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
+                    "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
+                };
+                string toBc = log.NewStatus switch {
+                    "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
+                    "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
+                };
+                <div class="audit-item">
+                    <div class="audit-dot"></div>
+                    <div class="audit-content">
+                        <div class="audit-header">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span class="status-badge @fromBc" style="font-size: 0.75rem;">@log.OldStatus</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;color:var(--text-muted);">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                </svg>
+                                <span class="status-badge @toBc" style="font-size: 0.75rem;">@log.NewStatus</span>
+                            </div>
+                            <span class="audit-time">@log.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(log.Note))
+                        {
+                            <div class="audit-note">@log.Note</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .audit-timeline {
+        position: relative;
+        padding-left: 28px;
+    }
+    .audit-timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: linear-gradient(to bottom, rgba(0,242,254,0.4), rgba(0,242,254,0.05));
+        border-radius: 2px;
+    }
+    .audit-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .audit-dot {
+        position: absolute;
+        left: -24px;
+        top: 14px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #00f2fe, #4facfe);
+        box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
+    }
+    .audit-content {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 14px 16px;
+        transition: border-color 0.2s ease;
+    }
+    .audit-content:hover {
+        border-color: rgba(0, 242, 254, 0.2);
+    }
+    .audit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .audit-time {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+    .audit-note {
+        margin-top: 8px;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        padding: 6px 10px;
+        background: rgba(0,0,0,0.15);
+        border-radius: 6px;
+    }
+</style>

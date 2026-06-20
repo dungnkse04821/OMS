@@ -61,6 +61,19 @@
             <span asp-validation-for="Product.Warehouse" class="text-danger"></span>
         </div>
 
+        <div class="grid-2">
+            <div class="form-group">
+                <label asp-for="Product.StockQuantity" class="form-label"></label>
+                <input asp-for="Product.StockQuantity" type="number" min="0" class="form-input" placeholder="Ví dụ: 50" />
+                <span asp-validation-for="Product.StockQuantity" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Product.LowStockThreshold" class="form-label"></label>
+                <input asp-for="Product.LowStockThreshold" type="number" min="0" class="form-input" placeholder="Ví dụ: 5" />
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 4px;">⚠️ Cảnh báo khi tồn kho ≤ ngưỡng này</span>
+            </div>
+        </div>
+
         <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; flex-wrap: wrap;">
             <a href="/Products" class="btn-secondary-premium">
                 Hủy

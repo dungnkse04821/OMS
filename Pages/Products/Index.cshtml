@@ -5,10 +5,10 @@
 }
 
 <div class="glass-card">
-    <div class="d-flex justify-content-between align-items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 1.5rem;">
         <div>
             <h1 class="page-title">Quản lý Sản phẩm</h1>
-            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Danh sách SKU sản phẩm, giá nhập, giá bán và kho chứa</p>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Danh sách SKU sản phẩm, giá nhập, giá bán và tồn kho</p>
         </div>
         <a href="/Products/Create" class="btn-premium">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
@@ -55,6 +55,7 @@
                         <th style="text-align: right;">Giá bán</th>
                         <th>Nguồn hàng</th>
                         <th>Kho</th>
+                        <th style="text-align: center;">Tồn kho</th>
                         <th style="text-align: right;">Hành động</th>
                     </tr>
                 </thead>
@@ -69,6 +70,25 @@
                             <td style="text-align: right; color: #00f2fe; font-weight: 600;">@product.SellingPrice.ToString("N0") ₫</td>
                             <td>@product.Source</td>
                             <td>@product.Warehouse</td>
+                            <td style="text-align: center;">
+                                @if (product.StockQuantity == 0)
+                                {
+                                    <span style="background: rgba(239,68,68,0.1); color: rgba(239,68,68,0.6); border-radius: 6px; padding: 3px 10px; font-size: 0.8rem; font-weight: 600;">Hết hàng</span>
+                                }
+                                else if (product.StockQuantity <= product.LowStockThreshold)
+                                {
+                                    <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 3px 10px; font-size: 0.8rem; font-weight: 600;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:12px;height:12px;">
+                                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                        </svg>
+                                        @product.StockQuantity
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color: var(--success); font-weight: 600;">@product.StockQuantity</span>
+                                }
+                            </td>
                             <td>
                                 <div class="action-btn-group" style="justify-content: flex-end;">
                                     <a href="/Products/Edit?sku=@product.Sku" class="action-btn edit" title="Sửa">
@@ -113,8 +133,14 @@
                             <span class="mobile-card-value">@product.Category</span>
                         </div>
                         <div>
-                            <span class="mobile-card-label">Nguồn hàng:</span>
-                            <span class="mobile-card-value">@product.Source</span>
+                            <span class="mobile-card-label">Tồn kho:</span>
+                            <span class="mobile-card-value" style="color: @(product.StockQuantity == 0 ? "var(--danger)" : product.StockQuantity <= product.LowStockThreshold ? "var(--warning)" : "var(--success)"); font-weight: 600;">
+                                @(product.StockQuantity == 0 ? "Hết hàng" : product.StockQuantity.ToString())
+                                @if (product.StockQuantity > 0 && product.StockQuantity <= product.LowStockThreshold)
+                                {
+                                    <span style="font-size: 0.75rem; color: var(--danger);"> (Sắp hết)</span>
+                                }
+                            </span>
                         </div>
                         <div>
                             <span class="mobile-card-label">Giá nhập:</span>
@@ -125,8 +151,8 @@
                             <span class="mobile-card-value" style="color: #00f2fe; font-weight: bold;">@product.SellingPrice.ToString("N0") ₫</span>
                         </div>
                         <div style="grid-column: span 2;">
-                            <span class="mobile-card-label">Kho lưu trữ:</span>
-                            <span class="mobile-card-value">@product.Warehouse</span>
+                            <span class="mobile-card-label">Nguồn / Kho:</span>
+                            <span class="mobile-card-value">@product.Source — @product.Warehouse</span>
                         </div>
                     </div>
                     <div class="mobile-card-actions">

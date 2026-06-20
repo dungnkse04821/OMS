@@ -54,17 +54,41 @@ namespace OMS.Pages.Orders
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
                 var query = SearchQuery.Trim().ToLower();
-                list = list.Where(o => 
-                    o.Id.ToLower().Contains(query) || 
-                    o.CustomerName.ToLower().Contains(query) || 
-                    o.PhoneNumber.Contains(query) || 
-                    o.Code.ToLower().Contains(query) || 
+                list = list.Where(o =>
+                    o.Id.ToLower().Contains(query) ||
+                    o.CustomerName.ToLower().Contains(query) ||
+                    o.PhoneNumber.Contains(query) ||
+                    o.Code.ToLower().Contains(query) ||
                     o.ProductName.ToLower().Contains(query)
                 ).ToList();
             }
 
             // Order by date descending by default (if set)
             Orders = list.OrderByDescending(o => o.OrderDate ?? DateTime.MinValue).ToList();
+        }
+
+        // Bulk update handler — nhận danh sách ID và trạng thái mới
+        public async Task<IActionResult> OnPostBulkUpdateAsync(
+            [FromForm] string[] selectedIds,
+            [FromForm] string bulkStatus)
+        {
+            if (selectedIds == null || selectedIds.Length == 0 || string.IsNullOrWhiteSpace(bulkStatus))
+            {
+                return RedirectToPage();
+            }
+
+            var allOrders = await _orderRepository.GetAllAsync();
+            foreach (var id in selectedIds)
+            {
+                var order = allOrders.FirstOrDefault(o => o.Id == id);
+                if (order != null)
+                {
+                    order.Status = bulkStatus;
+                    await _orderRepository.UpdateAsync(order);
+                }
+            }
+
+            return RedirectToPage(new { StatusFilter, SearchQuery });
         }
     }
 }

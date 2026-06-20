@@ -27,5 +27,11 @@ namespace OMS.Models
 
         [DisplayName("Kho")]
         public string Warehouse { get; set; }
+
+        [DisplayName("Tồn kho")]
+        public int StockQuantity { get; set; } = 0;
+
+        [DisplayName("Ngưỡng cảnh báo")]
+        public int LowStockThreshold { get; set; } = 5;
     }
 }
