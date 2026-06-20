@@ -1,0 +1,790 @@
+@page
+@model OMS.Pages.Orders.PrintModel
+@{
+    Layout = null; // Không dùng layout chính, đây là trang in riêng biệt
+    ViewData["Title"] = $"Hóa đơn #{Model.Order?.Id}";
+
+    var order = Model.Order!;
+    bool isCOD = order.RemainingAmount > 0;
+    string printDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hóa đơn @order.Id - OMS</title>
+    <style>
+        /* === Reset & Base === */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 13px;
+            color: #1a1a2e;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* === Screen toolbar (hidden when printing) === */
+        .print-toolbar {
+            width: 794px;
+            max-width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .toolbar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+        }
+        .btn-print:hover { opacity: 0.85; }
+
+        .btn-back {
+            background: rgba(0,0,0,0.08);
+            color: #444;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-back:hover { background: rgba(0,0,0,0.14); }
+
+        /* === Invoice Paper === */
+        .invoice-paper {
+            width: 794px; /* A4 width at 96dpi */
+            max-width: 100%;
+            background: #fff;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* === Header === */
+        .invoice-header {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #fff;
+            padding: 32px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .brand-block .brand-name {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-block .brand-tagline {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-meta .doc-type {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #00f2fe;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .invoice-meta .order-id {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin: 4px 0;
+        }
+
+        .invoice-meta .print-date {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.45);
+        }
+
+        /* === Status Banner === */
+        .status-banner {
+            padding: 10px 40px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-banner.pending   { background: #fff3cd; color: #856404; }
+        .status-banner.ordered   { background: #e8d5f5; color: #6f42c1; }
+        .status-banner.shipping  { background: #cff4fc; color: #0c8898; }
+        .status-banner.arrived   { background: #d1ecf1; color: #0c5460; }
+        .status-banner.delivered { background: #d4edda; color: #155724; }
+        .status-banner.cancelled { background: #f8d7da; color: #721c24; }
+
+        /* === Body Content === */
+        .invoice-body {
+            padding: 32px 40px;
+        }
+
+        /* === Two-Column Info Grid === */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .info-section {
+            background: #f8f9fc;
+            border: 1px solid #e5e9f0;
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+
+        .info-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #6c757d;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 5px 0;
+            border-bottom: 1px dashed #e5e9f0;
+            gap: 12px;
+        }
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label {
+            color: #6c757d;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1a1a2e;
+            text-align: right;
+        }
+
+        /* === Product Table === */
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #6c757d;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+        }
+
+        .product-table thead tr {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            color: #fff;
+        }
+
+        .product-table thead th {
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .product-table thead th:last-child,
+        .product-table thead th:nth-child(4),
+        .product-table thead th:nth-child(3) { text-align: right; }
+
+        .product-table tbody tr { border-bottom: 1px solid #e5e9f0; }
+        .product-table tbody tr:last-child { border-bottom: none; }
+        .product-table tbody tr:nth-child(even) { background: #f8f9fc; }
+
+        .product-table tbody td {
+            padding: 12px 14px;
+            vertical-align: top;
+        }
+        .product-table tbody td:nth-child(3),
+        .product-table tbody td:nth-child(4),
+        .product-table tbody td:last-child { text-align: right; }
+
+        .product-sku {
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+            color: #0c5460;
+            background: #cff4fc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .product-name {
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .product-variant {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        /* === Finance Summary === */
+        .finance-summary {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 28px;
+        }
+
+        .finance-table {
+            width: 320px;
+            border: 1px solid #e5e9f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .finance-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid #e5e9f0;
+            font-size: 0.85rem;
+        }
+        .finance-row:last-child { border-bottom: none; }
+        .finance-row.highlight {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            color: #fff;
+        }
+        .finance-row.cod-row {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: #fff;
+        }
+
+        .finance-label { color: inherit; }
+        .finance-value { font-weight: 700; color: inherit; }
+        .finance-row.highlight .finance-label { color: rgba(255,255,255,0.7); }
+        .finance-row.cod-row .finance-label { color: rgba(255,255,255,0.85); }
+
+        /* === COD Badge === */
+        .cod-badge {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 14px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            letter-spacing: 0.5px;
+        }
+
+        .cod-badge .cod-amount {
+            font-size: 1.4rem;
+            font-weight: 900;
+        }
+
+        /* === Notes === */
+        .notes-section {
+            background: #fffef0;
+            border: 1px dashed #f0c040;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+            font-size: 0.85rem;
+            color: #5a4a00;
+        }
+        .notes-section .notes-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* === Footer === */
+        .invoice-footer {
+            background: #f8f9fc;
+            border-top: 1px solid #e5e9f0;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #6c757d;
+            gap: 16px;
+        }
+
+        .footer-note { font-style: italic; }
+
+        .signature-block {
+            text-align: center;
+        }
+        .signature-line {
+            width: 140px;
+            border-top: 1px solid #adb5bd;
+            margin: 36px auto 6px auto;
+        }
+        .signature-label { font-size: 0.7rem; }
+
+        /* === Divider === */
+        .cut-line {
+            border: none;
+            border-top: 2px dashed #dee2e6;
+            margin: 28px 0;
+            position: relative;
+        }
+        .cut-line::before {
+            content: '✂ Cắt theo đường này';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 0 12px;
+            font-size: 0.7rem;
+            color: #adb5bd;
+        }
+
+        /* === Delivery Slip (Phiếu Gửi Hàng) === */
+        .slip-section {
+            padding: 24px 40px 32px;
+        }
+
+        .slip-title {
+            font-size: 1rem;
+            font-weight: 900;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1a1a2e;
+        }
+
+        .slip-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .slip-box {
+            border: 2px solid #1a1a2e;
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+
+        .slip-box-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .slip-box-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            line-height: 1.5;
+        }
+
+        .slip-box.cod-box {
+            border-color: #ff6b35;
+            background: #fff5f0;
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slip-box.cod-box .slip-box-value {
+            font-size: 1.5rem;
+            color: #c83a00;
+        }
+
+        /* === Print Media Query === */
+        @@media print {
+            @@page {
+                size: A4;
+                margin: 8mm 10mm;
+            }
+
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .print-toolbar { display: none !important; }
+
+            .invoice-paper {
+                width: 100%;
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .btn-print, .btn-back { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Screen-only Toolbar -->
+    <div class="print-toolbar">
+        <span class="toolbar-title">
+            Xem trước Hóa đơn &amp; Phiếu Gửi Hàng
+        </span>
+        <div class="toolbar-actions">
+            <a href="/Orders" class="btn-back">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Quay lại
+            </a>
+            <button class="btn-print" onclick="window.print()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.074 48.074 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+                </svg>
+                In ngay
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== INVOICE PAPER ========== -->
+    <div class="invoice-paper">
+
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="brand-block">
+                <div class="brand-name">OMS</div>
+                <div class="brand-tagline">Order Management System</div>
+            </div>
+            <div class="invoice-meta">
+                <div class="doc-type">Hóa đơn bán hàng</div>
+                <div class="order-id">#@order.Id</div>
+                <div class="print-date">In ngày: @printDate</div>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        @{
+            string bannerClass = order.Status switch
+            {
+                "Chờ đặt" => "pending",
+                "Đã đặt" => "ordered",
+                "Đang về" => "shipping",
+                "Đã về" => "arrived",
+                "Đã giao" => "delivered",
+                "Hủy" => "cancelled",
+                _ => "pending"
+            };
+            string statusIcon = order.Status switch
+            {
+                "Chờ đặt" => "⏳",
+                "Đã đặt" => "✅",
+                "Đang về" => "🚚",
+                "Đã về" => "📦",
+                "Đã giao" => "🎉",
+                "Hủy" => "❌",
+                _ => "•"
+            };
+        }
+        <div class="status-banner @bannerClass">
+            <span>@statusIcon</span>
+            <span>Trạng thái: @order.Status</span>
+        </div>
+
+        <!-- Body -->
+        <div class="invoice-body">
+
+            <!-- Info Grid -->
+            <div class="info-grid">
+                <!-- Customer Info -->
+                <div class="info-section">
+                    <div class="info-section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                        Thông tin khách hàng
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Họ tên</span>
+                        <span class="info-value">@order.CustomerName</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Điện thoại</span>
+                        <span class="info-value">@order.PhoneNumber</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Địa chỉ</span>
+                        <span class="info-value" style="max-width:200px;">@order.ShippingAddress</span>
+                    </div>
+                </div>
+
+                <!-- Order Info -->
+                <div class="info-section">
+                    <div class="info-section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        Thông tin đơn hàng
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mã đơn</span>
+                        <span class="info-value" style="font-family:monospace; color:#302b63;">@order.Id</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày đặt</span>
+                        <span class="info-value">@(order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày về</span>
+                        <span class="info-value">@(order.ArrivalDate?.ToString("dd/MM/yyyy") ?? "-")</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Nguồn / Kho</span>
+                        <span class="info-value">@(order.Source ?? "-") / @(order.Warehouse ?? "-")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Table -->
+            <div class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                </svg>
+                Chi tiết sản phẩm
+            </div>
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Sản phẩm</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(order.Code))
+                            {
+                                <span class="product-sku">@order.Code</span><br />
+                            }
+                            <span class="product-name">@order.ProductName</span>
+                            @if (!string.IsNullOrWhiteSpace(order.Color) || !string.IsNullOrWhiteSpace(order.Size))
+                            {
+                                <div class="product-variant">
+                                    @(!string.IsNullOrWhiteSpace(order.Color) ? $"Màu: {order.Color}" : "")
+                                    @(!string.IsNullOrWhiteSpace(order.Size) ? $" | Size: {order.Size}" : "")
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(order.Category))
+                            {
+                                <div class="product-variant">Danh mục: @order.Category</div>
+                            }
+                        </td>
+                        <td>@order.Quantity</td>
+                        <td>@order.SellingPrice.ToString("N0") ₫</td>
+                        <td><strong>@order.TotalAmount.ToString("N0") ₫</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Finance Summary -->
+            <div class="finance-summary">
+                <div class="finance-table">
+                    <div class="finance-row">
+                        <span class="finance-label">Tổng tiền hàng</span>
+                        <span class="finance-value">@order.TotalAmount.ToString("N0") ₫</span>
+                    </div>
+                    @if (order.Discount > 0)
+                    {
+                        <div class="finance-row">
+                            <span class="finance-label">Chiết khấu</span>
+                            <span class="finance-value" style="color:#c0392b;">- @order.Discount.ToString("N0") ₫</span>
+                        </div>
+                    }
+                    @if (order.Deposit > 0)
+                    {
+                        <div class="finance-row">
+                            <span class="finance-label">Đã đặt cọc</span>
+                            <span class="finance-value" style="color:#27ae60;">- @order.Deposit.ToString("N0") ₫</span>
+                        </div>
+                    }
+                    <div class="finance-row highlight">
+                        <span class="finance-label">Còn lại phải thu</span>
+                        <span class="finance-value">@order.RemainingAmount.ToString("N0") ₫</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COD Badge (only if there's remaining amount to collect) -->
+            @if (isCOD)
+            {
+                <div class="cod-badge">
+                    <div>
+                        <div style="font-size:0.7rem; opacity:0.85; margin-bottom:3px; letter-spacing:2px;">💰 THU HỘ KHI GIAO (COD)</div>
+                        <div style="font-size:0.8rem; opacity:0.85;">Shipper vui lòng thu đủ số tiền sau khi giao hàng</div>
+                    </div>
+                    <div class="cod-amount">@order.RemainingAmount.ToString("N0") ₫</div>
+                </div>
+            }
+            else
+            {
+                <div class="notes-section">
+                    <div class="notes-title">✅ Đã thanh toán đầy đủ</div>
+                    Đơn hàng này đã được thanh toán hoàn toàn. Không cần thu tiền khi giao.
+                </div>
+            }
+
+        </div>
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            <div>
+                <div style="font-weight:700; margin-bottom:3px;">Cảm ơn quý khách!</div>
+                <div class="footer-note">Mọi thắc mắc vui lòng liên hệ ngay với chúng tôi.</div>
+            </div>
+            <div style="display:flex; gap:40px;">
+                <div class="signature-block">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Người giao hàng</div>
+                </div>
+                <div class="signature-block">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Khách hàng ký nhận</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cut Line Separator -->
+        <div style="padding: 0 40px;">
+            <hr class="cut-line" />
+        </div>
+
+        <!-- ========== DELIVERY SLIP (PHIẾU GỬI HÀNG) ========== -->
+        <div class="slip-section">
+            <div class="slip-title">📦 Phiếu Gửi Hàng</div>
+            <div class="slip-grid">
+                <div class="slip-box">
+                    <div class="slip-box-label">👤 Người nhận</div>
+                    <div class="slip-box-value">@order.CustomerName</div>
+                </div>
+                <div class="slip-box">
+                    <div class="slip-box-label">📞 Số điện thoại</div>
+                    <div class="slip-box-value" style="font-size:1.2rem; letter-spacing:1px;">@order.PhoneNumber</div>
+                </div>
+                <div class="slip-box" style="grid-column: span 2;">
+                    <div class="slip-box-label">📍 Địa chỉ giao hàng</div>
+                    <div class="slip-box-value" style="font-size:1rem;">@order.ShippingAddress</div>
+                </div>
+                <div class="slip-box">
+                    <div class="slip-box-label">📋 Mã đơn hàng</div>
+                    <div class="slip-box-value" style="font-family:monospace;">@order.Id</div>
+                </div>
+                <div class="slip-box">
+                    <div class="slip-box-label">🛍 Nội dung kiện hàng</div>
+                    <div class="slip-box-value" style="font-size:0.85rem; font-weight:500;">
+                        @order.ProductName
+                        @if (!string.IsNullOrWhiteSpace(order.Color) || !string.IsNullOrWhiteSpace(order.Size))
+                        {
+                            @($"({order.Color} / {order.Size})")
+                        }
+                        — SL: @order.Quantity
+                    </div>
+                </div>
+                @if (isCOD)
+                {
+                    <div class="slip-box cod-box">
+                        <div>
+                            <div class="slip-box-label" style="color: #c83a00;">💰 THU HỘ (COD)</div>
+                            <div style="font-size:0.8rem; color:#c83a00; font-weight:600;">Shipper thu khi giao hàng</div>
+                        </div>
+                        <div class="slip-box-value">@order.RemainingAmount.ToString("N0") ₫</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="slip-box" style="grid-column: span 2; background:#f0fff4; border-color:#27ae60;">
+                        <div class="slip-box-label" style="color:#155724;">✅ ĐÃ THANH TOÁN ĐẦY ĐỦ</div>
+                        <div class="slip-box-value" style="color:#155724; font-size:0.85rem; font-weight:600;">Không thu tiền khi giao hàng</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
