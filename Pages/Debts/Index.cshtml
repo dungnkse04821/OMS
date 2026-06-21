@@ -1,0 +1,446 @@
+@page
+@model OMS.Pages.Debts.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Công nợ";
+}
+
+<div class="glass-card">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 1.5rem;">
+        <div>
+            <h1 class="page-title">Quản lý Công nợ</h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Theo dõi các khoản tiền khách hàng còn chưa thanh toán</p>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 28px; gap: 16px;">
+        <!-- Total Debt -->
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 8px; border-color: rgba(239,68,68,0.3);">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(220,38,38,0.15)); color: var(--danger); flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Tổng công nợ</span>
+                    <span class="stat-value" style="color: var(--danger); font-size: 1.35rem;">@Model.TotalDebtAmount.ToString("N0") ₫</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Debt Count -->
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 8px; border-color: rgba(251,191,36,0.3);">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.15)); color: var(--warning); flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Số đơn đang nợ</span>
+                    <span class="stat-value" style="color: var(--warning); font-size: 1.35rem;">@Model.TotalDebtCount đơn</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue -->
+        <div class="glass-card stat-card" style="flex-direction: column; align-items: flex-start; padding: 20px; gap: 8px; border-color: rgba(239,68,68,0.5);">
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <div class="stat-icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.2)); color: #ff4444; flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Nợ quá 30 ngày</span>
+                    <span class="stat-value" style="color: #ff4444; font-size: 1.35rem;">@Model.TotalOverdueAmount.ToString("N0") ₫</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">@Model.TotalOverdueCount đơn</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.TotalDebtCount == 0 && string.IsNullOrEmpty(Model.SearchQuery))
+    {
+        <!-- Empty State -->
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: rgba(74,222,128,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(74,222,128,0.3);">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 40px; height: 40px; color: var(--success);">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 style="color: var(--success); font-size: 1.3rem; margin-bottom: 8px;">Không có công nợ!</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Tất cả khách hàng đã thanh toán đầy đủ. Tuyệt vời!</p>
+        </div>
+    }
+    else
+    {
+        <!-- Search + Sort Bar -->
+        <form method="get" class="filter-bar" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <input type="text" name="SearchQuery" value="@Model.SearchQuery" class="form-input"
+                       placeholder="Tìm kiếm theo mã đơn, khách hàng, SĐT, sản phẩm..."
+                       style="flex-grow: 1; min-width: 200px;" />
+                <select name="SortBy" class="form-input" style="padding: 12px 14px; width: auto; min-width: 180px;" onchange="this.form.submit()">
+                    @{
+                        var sortOptions = new[]
+                        {
+                            ("amount_desc", "Số tiền nợ (Cao → Thấp)"),
+                            ("amount_asc",  "Số tiền nợ (Thấp → Cao)"),
+                            ("date_asc",    "Ngày đặt (Cũ nhất)"),
+                            ("date_desc",   "Ngày đặt (Mới nhất)"),
+                            ("name_asc",    "Tên khách hàng (A–Z)")
+                        };
+                        foreach (var (val, label) in sortOptions)
+                        {
+                            if (Model.SortBy == val)
+                            {
+                                <option value="@val" selected="selected">@label</option>
+                            }
+                            else
+                            {
+                                <option value="@val">@label</option>
+                            }
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn-secondary-premium" style="padding: 12px 20px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+                    </svg>
+                    Tìm
+                </button>
+                @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <a href="/Debts" class="btn-secondary-premium" style="padding: 12px 20px; display: inline-flex; align-items: center; justify-content: center;">Đặt lại</a>
+                }
+            </div>
+        </form>
+
+        @if (Model.DebtOrders.Count == 0)
+        {
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Không tìm thấy công nợ nào khớp với tìm kiếm.
+            </div>
+        }
+        else
+        {
+            <!-- Partial Pay Modal (hidden) -->
+            <div id="partial-pay-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+                <div class="glass-card" style="width: 100%; max-width: 420px; margin: 20px; padding: 28px;">
+                    <h3 style="margin: 0 0 6px; font-size: 1.1rem;">Thu tiền một phần</h3>
+                    <p id="modal-order-info" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;"></p>
+                    <form id="partial-pay-form" method="post" asp-page-handler="PartialPay">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="modal-order-id" name="orderId" value="" />
+                        <div style="margin-bottom: 16px;">
+                            <label class="form-label">Số tiền thu được (₫)</label>
+                            <input type="number" id="modal-paid-amount" name="paidAmount" class="form-input"
+                                   placeholder="Nhập số tiền..." min="1" step="1000" required
+                                   style="font-size: 1rem;" />
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn-premium" style="flex: 1; justify-content: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                Xác nhận thu
+                            </button>
+                            <button type="button" id="modal-cancel-btn" class="btn-secondary-premium" style="flex: 1; justify-content: center;">
+                                Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="d-none d-md-table table-responsive" style="width: 100%;">
+                <table class="custom-table" style="font-size: 0.88rem;">
+                    <thead>
+                        <tr>
+                            <th>Mã ĐH</th>
+                            <th>Ngày đặt</th>
+                            <th>Khách hàng</th>
+                            <th>Sản phẩm</th>
+                            <th style="text-align: right;">Tổng tiền</th>
+                            <th style="text-align: right;">Đã cọc</th>
+                            <th style="text-align: right;">Còn nợ</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.DebtOrders)
+                        {
+                            var isOverdue = order.OrderDate.HasValue && order.OrderDate.Value < DateTime.Now.AddDays(-30);
+                            string badgeClass = order.Status switch
+                            {
+                                "Chờ đặt" => "pending",
+                                "Đã đặt"  => "ordered",
+                                "Đang về" => "shipping",
+                                "Đã về"   => "arrived",
+                                "Đã giao" => "delivered",
+                                "Hủy"     => "cancelled",
+                                _         => "pending"
+                            };
+                            var daysAgo = order.OrderDate.HasValue
+                                ? (int)(DateTime.Now - order.OrderDate.Value).TotalDays
+                                : 0;
+
+                            <tr class="@(isOverdue ? "overdue-row" : "")">
+                                <td style="font-family: monospace; color: #00f2fe; font-weight: 600;">
+                                    <a href="/Orders/Edit?id=@order.Id" style="color: #00f2fe; text-decoration: none;">@order.Id</a>
+                                </td>
+                                <td>
+                                    <div>@(order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</div>
+                                    @if (isOverdue)
+                                    {
+                                        <div style="font-size: 0.7rem; color: var(--danger); font-weight: 600;">⚠ @daysAgo ngày trước</div>
+                                    }
+                                    else
+                                    {
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">@daysAgo ngày trước</div>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600;">@order.CustomerName</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">@order.PhoneNumber</div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.8rem; color: #00f2fe; font-family: monospace;">@order.Code</div>
+                                    <div>@order.ProductName</div>
+                                    @if (!string.IsNullOrEmpty(order.Color) || !string.IsNullOrEmpty(order.Size))
+                                    {
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">@(order.Color ?? "-") / @(order.Size ?? "-") × @order.Quantity</div>
+                                    }
+                                </td>
+                                <td style="text-align: right; font-weight: 600;">@order.TotalAmount.ToString("N0") ₫</td>
+                                <td style="text-align: right; color: var(--success);">@order.Deposit.ToString("N0") ₫</td>
+                                <td style="text-align: right; color: @(isOverdue ? "#ff4444" : "var(--warning)"); font-weight: 700; font-size: 0.95rem;">
+                                    @order.RemainingAmount.ToString("N0") ₫
+                                </td>
+                                <td>
+                                    <span class="status-badge @badgeClass">@order.Status</span>
+                                </td>
+                                <td>
+                                    <div class="action-btn-group" style="justify-content: center; gap: 8px;">
+                                        <!-- Mark Fully Paid -->
+                                        <form method="post" asp-page-handler="MarkPaid" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="orderId" value="@order.Id" />
+                                            <button type="submit" class="btn-premium" title="Đánh dấu đã thu đủ"
+                                                    style="padding: 6px 12px; font-size: 0.78rem; gap: 5px; display: inline-flex; align-items: center;"
+                                                    onclick="return confirm('Xác nhận đã thu đủ @order.RemainingAmount.ToString("N0") ₫ từ @order.CustomerName?')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                </svg>
+                                                Thu đủ
+                                            </button>
+                                        </form>
+                                        <!-- Partial Pay -->
+                                        <button type="button" class="btn-secondary-premium btn-partial-pay"
+                                                data-order-id="@order.Id"
+                                                data-customer="@order.CustomerName"
+                                                data-remaining="@order.RemainingAmount.ToString("N0")"
+                                                title="Thu một phần"
+                                                style="padding: 6px 12px; font-size: 0.78rem; gap: 5px; display: inline-flex; align-items: center;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:13px;height:13px;">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+                                            </svg>
+                                            Thu 1 phần
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr style="border-top: 2px solid rgba(255,255,255,0.1);">
+                            <td colspan="6" style="text-align: right; font-weight: 600; color: var(--text-muted); padding-top: 12px;">
+                                Tổng cộng (@Model.DebtOrders.Count đơn):
+                            </td>
+                            <td style="text-align: right; font-weight: 700; color: var(--danger); font-size: 1rem; padding-top: 12px;">
+                                @Model.DebtOrders.Sum(o => o.RemainingAmount).ToString("N0") ₫
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="d-md-none mobile-card-list">
+                @foreach (var order in Model.DebtOrders)
+                {
+                    var isOverdue = order.OrderDate.HasValue && order.OrderDate.Value < DateTime.Now.AddDays(-30);
+                    string badgeClass = order.Status switch
+                    {
+                        "Chờ đặt" => "pending",
+                        "Đã đặt"  => "ordered",
+                        "Đang về" => "shipping",
+                        "Đã về"   => "arrived",
+                        "Đã giao" => "delivered",
+                        "Hủy"     => "cancelled",
+                        _         => "pending"
+                    };
+                    var daysAgo = order.OrderDate.HasValue
+                        ? (int)(DateTime.Now - order.OrderDate.Value).TotalDays
+                        : 0;
+
+                    <div class="mobile-data-card @(isOverdue ? "overdue-card" : "")">
+                        <div class="mobile-card-header">
+                            <div>
+                                <span class="mobile-card-title">@order.CustomerName</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">@order.PhoneNumber</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span class="status-badge @badgeClass">@order.Status</span>
+                                @if (isOverdue)
+                                {
+                                    <div style="font-size: 0.65rem; color: var(--danger); font-weight: 600; margin-top: 4px;">⚠ @daysAgo ngày</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="mobile-card-body">
+                            <div>
+                                <span class="mobile-card-label">Mã đơn:</span>
+                                <span class="mobile-card-value" style="font-family: monospace; color: #00f2fe;">@order.Id</span>
+                            </div>
+                            <div>
+                                <span class="mobile-card-label">Ngày đặt:</span>
+                                <span class="mobile-card-value">@(order.OrderDate?.ToString("dd/MM/yyyy") ?? "-")</span>
+                            </div>
+                            <div style="grid-column: span 2; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px;">
+                                <div style="font-size: 0.8rem; color: #00f2fe; font-family: monospace;">@order.Code</div>
+                                <div style="font-weight: 500; font-size: 0.85rem;">@order.ProductName</div>
+                            </div>
+                            <div>
+                                <span class="mobile-card-label">Tổng tiền:</span>
+                                <span class="mobile-card-value" style="font-weight: bold;">@order.TotalAmount.ToString("N0") ₫</span>
+                            </div>
+                            <div>
+                                <span class="mobile-card-label">Đã cọc:</span>
+                                <span class="mobile-card-value" style="color: var(--success);">@order.Deposit.ToString("N0") ₫</span>
+                            </div>
+                            <div style="grid-column: span 2; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Còn nợ:</span>
+                                <span style="color: @(isOverdue ? "#ff4444" : "var(--warning)"); font-weight: 700; font-size: 1.05rem;">@order.RemainingAmount.ToString("N0") ₫</span>
+                            </div>
+                        </div>
+                        <div class="mobile-card-actions">
+                            <!-- Mark Fully Paid -->
+                            <form method="post" asp-page-handler="MarkPaid" style="display:inline; flex: 1;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderId" value="@order.Id" />
+                                <button type="submit" class="btn-premium"
+                                        style="padding: 7px 14px; font-size: 0.82rem; width: 100%; justify-content: center; gap: 5px; display: flex; align-items: center;"
+                                        onclick="return confirm('Xác nhận đã thu đủ từ @order.CustomerName?')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                    Thu đủ
+                                </button>
+                            </form>
+                            <button type="button" class="btn-secondary-premium btn-partial-pay"
+                                    data-order-id="@order.Id"
+                                    data-customer="@order.CustomerName"
+                                    data-remaining="@order.RemainingAmount.ToString("N0")"
+                                    style="padding: 7px 14px; font-size: 0.82rem; flex: 1; justify-content: center; gap: 5px; display: flex; align-items: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+                                </svg>
+                                Thu 1 phần
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<style>
+    @@media (min-width: 768px) {
+        .d-none { display: none !important; }
+        .d-md-table { display: table !important; }
+        .d-md-none { display: none !important; }
+    }
+    @@media (max-width: 767.98px) {
+        .d-none { display: none !important; }
+        .d-md-table { display: none !important; }
+        .d-md-none { display: flex !important; }
+    }
+
+    /* Overdue row highlight for desktop table */
+    .overdue-row td {
+        background: rgba(239, 68, 68, 0.04);
+    }
+    .overdue-row:hover td {
+        background: rgba(239, 68, 68, 0.08) !important;
+    }
+
+    /* Overdue card highlight for mobile */
+    .overdue-card {
+        border-color: rgba(239, 68, 68, 0.35) !important;
+    }
+
+    /* Modal animation */
+    #partial-pay-modal.show {
+        display: flex !important;
+        animation: fadeIn 0.2s ease;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    #partial-pay-modal .glass-card {
+        animation: slideUp 0.25s ease;
+    }
+    @@keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+
+<script>
+(function () {
+    const modal = document.getElementById('partial-pay-modal');
+    const modalOrderId = document.getElementById('modal-order-id');
+    const modalOrderInfo = document.getElementById('modal-order-info');
+    const modalPaidAmount = document.getElementById('modal-paid-amount');
+    const cancelBtn = document.getElementById('modal-cancel-btn');
+
+    function openModal(btn) {
+        const orderId = btn.dataset.orderId;
+        const customer = btn.dataset.customer;
+        const remaining = btn.dataset.remaining;
+
+        modalOrderId.value = orderId;
+        modalOrderInfo.textContent = 'Đơn ' + orderId + ' — ' + customer + ' — Còn nợ: ' + remaining + ' ₫';
+        modalPaidAmount.value = '';
+        modal.classList.add('show');
+        setTimeout(() => modalPaidAmount.focus(), 100);
+    }
+
+    function closeModal() {
+        modal.classList.remove('show');
+    }
+
+    document.querySelectorAll('.btn-partial-pay').forEach(function (btn) {
+        btn.addEventListener('click', function () { openModal(this); });
+    });
+
+    cancelBtn && cancelBtn.addEventListener('click', closeModal);
+
+    modal && modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+    });
+})();
+</script>

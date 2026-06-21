@@ -29,6 +29,10 @@ namespace OMS.Pages
         public int TotalCustomers { get; set; }
         public int TotalProducts { get; set; }
 
+        // Debt summary
+        public decimal TotalDebtAmount { get; set; }
+        public int TotalDebtCount { get; set; }
+
         // Lists
         public List<Order> RecentOrders { get; set; } = new();
 
@@ -48,6 +52,11 @@ namespace OMS.Pages
             TotalRevenue = activeOrders.Sum(o => o.TotalAmount);
             TotalDeposits = activeOrders.Sum(o => o.Deposit);
             TotalProfit = activeOrders.Sum(o => o.Profit);
+
+            // Debt summary: orders with remaining amount > 0
+            var debtOrders = activeOrders.Where(o => o.RemainingAmount > 0).ToList();
+            TotalDebtAmount = debtOrders.Sum(o => o.RemainingAmount);
+            TotalDebtCount = debtOrders.Count;
 
             // Get Top 5 Recent Orders
             RecentOrders = orders
