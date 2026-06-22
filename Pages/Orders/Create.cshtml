@@ -198,6 +198,44 @@
             </div>
         </div>
 
+        <!-- 5. Vận chuyển -->
+        <h3 style="color: #00f2fe; margin: 30px 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">
+            5. Vận chuyển & Tra cứu đơn
+        </h3>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label asp-for="Order.ShippingCarrier" class="form-label"></label>
+                <select asp-for="Order.ShippingCarrier" class="form-input" id="order-carrier">
+                    <option value="">-- Chọn đơn vị vận chuyển --</option>
+                    <option value="GHTK">GHTK (Giao Hàng Tiết Kiệm)</option>
+                    <option value="GHN">GHN (Giao Hàng Nhanh)</option>
+                    <option value="Viettel Post">Viettel Post</option>
+                    <option value="Vietnam Post">Vietnam Post (EMS)</option>
+                    <option value="J&T Express">J&T Express</option>
+                    <option value="Best Express">Best Express</option>
+                    <option value="Ninja Van">Ninja Van</option>
+                    <option value="SPX Express">SPX Express (Shopee)</option>
+                    <option value="Lazada Logistics">Lazada Logistics</option>
+                    <option value="Tiki Now">Tiki Now</option>
+                    <option value="Khác">Khác</option>
+                </select>
+                <span asp-validation-for="Order.ShippingCarrier" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Order.TrackingCode" class="form-label"></label>
+                <div style="position: relative;">
+                    <input asp-for="Order.TrackingCode" id="order-tracking-code" class="form-input" placeholder="Nhập mã vận đơn..." style="padding-right: 110px;" />
+                    <button type="button" id="btn-track-preview" onclick="openTrackingUrl()" class="btn-secondary-premium"
+                        style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 6px 12px; font-size: 0.78rem; border-radius: 6px;">
+                        🔍 Tra cứu
+                    </button>
+                </div>
+                <span asp-validation-for="Order.TrackingCode" class="text-danger"></span>
+            </div>
+        </div>
+
         <!-- Form Submit & Cancel Actions -->
         <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 40px; flex-wrap: wrap;">
             <a href="/Orders" class="btn-secondary-premium">
@@ -215,6 +253,38 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Tracking URL builder - maps carrier name to their tracking search URL
+        const CARRIER_TRACKING_URLS = {
+            'GHTK': (code) => `https://i.ghtk.vn/${code}`,
+            'GHN': (code) => `https://donhang.ghn.vn/?order_code=${code}`,
+            'Viettel Post': (code) => `https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/?billCode=${code}`,
+            'Vietnam Post': (code) => `https://www.vnpost.vn/vi-vn/dinh-vi/buu-pham?key=${code}`,
+            'J&T Express': (code) => `https://jtexpress.vn/tracking?bills=${code}`,
+            'Best Express': (code) => `https://best-inc-vn.com/track?bills=${code}`,
+            'Ninja Van': (code) => `https://www.ninjavan.co/vi-vn/tracking?id=${code}`,
+            'SPX Express': (code) => `https://spx.vn/tracking/?trackingNumber=${code}`,
+            'Lazada Logistics': (code) => `https://www.lazada.vn/order/${code}/`,
+            'Tiki Now': (code) => `https://tiki.vn/tracking?orderCode=${code}`,
+        };
+
+        function openTrackingUrl() {
+            const carrier = document.getElementById('order-carrier')?.value || '';
+            const code = (document.getElementById('order-tracking-code')?.value || '').trim();
+            if (!code) {
+                alert('Vui lòng nhập Mã vận đơn trước khi tra cứu.');
+                return;
+            }
+            const builder = CARRIER_TRACKING_URLS[carrier];
+            if (builder) {
+                window.open(builder(code), '_blank');
+            } else {
+                // Fallback: Google search the tracking code
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(code + ' tracking')}`, '_blank');
+            }
+        }
+    </script>
 
     <script>
         // Inject customer and product data from server model

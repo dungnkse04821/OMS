@@ -90,6 +90,12 @@ namespace OMS.Models
         [Required(ErrorMessage = "Vui lòng nhập Địa chỉ")]
         [DisplayName("Địa chỉ giao hàng")]
         public string ShippingAddress { get; set; }
+
+        [DisplayName("Đơn vị vận chuyển")]
+        public string? ShippingCarrier { get; set; }
+
+        [DisplayName("Mã vận đơn")]
+        public string? TrackingCode { get; set; }
     }
 
     public static class OrderStatusList
