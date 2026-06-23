@@ -33,5 +33,14 @@ namespace OMS.Models
 
         [DisplayName("Ngưỡng cảnh báo")]
         public int LowStockThreshold { get; set; } = 5;
+
+        // ── Soft-delete & audit metadata ─────────────────────────────────
+        public bool IsDeleted { get; set; } = false;
+
+        [DisplayName("Ngày tạo")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [DisplayName("Ngày cập nhật")]
+        public DateTime? UpdatedAt { get; set; }
     }
 }

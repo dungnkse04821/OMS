@@ -96,6 +96,15 @@ namespace OMS.Models
 
         [DisplayName("Mã vận đơn")]
         public string? TrackingCode { get; set; }
+
+        // ── Soft-delete & audit metadata ─────────────────────────────────
+        public bool IsDeleted { get; set; } = false;
+
+        [DisplayName("Ngày tạo")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [DisplayName("Ngày cập nhật")]
+        public DateTime? UpdatedAt { get; set; }
     }
 
     public static class OrderStatusList

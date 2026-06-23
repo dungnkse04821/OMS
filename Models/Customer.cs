@@ -25,5 +25,14 @@ namespace OMS.Models
 
         [DisplayName("Ghi chú")]
         public string? Note { get; set; }
+
+        // ── Soft-delete & audit metadata ─────────────────────────────────
+        public bool IsDeleted { get; set; } = false;
+
+        [DisplayName("Ngày tạo")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [DisplayName("Ngày cập nhật")]
+        public DateTime? UpdatedAt { get; set; }
     }
 }

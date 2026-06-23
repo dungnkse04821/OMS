@@ -2,28 +2,43 @@
 @model OMS.Pages.Orders.LogsModel
 @{
     ViewData["Title"] = "Lịch sử đơn hàng " + Model.Order?.Id;
+    bool isDeleted = Model.Order?.IsDeleted == true;
 }
 
 <div class="glass-card">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 1.5rem;">
         <div>
-            <h1 class="page-title">Lịch sử đơn hàng</h1>
+            <h1 class="page-title" style="display:flex;align-items:center;gap:10px;">
+                Lịch sử đơn hàng
+                @if (isDeleted)
+                {
+                    <span style="font-size:0.65rem;background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,0.35);color:#ff4d4d;border-radius:6px;padding:3px 10px;font-weight:600;letter-spacing:.5px;">ĐÃ XÓA</span>
+                }
+            </h1>
             <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">
-                Nhật ký thay đổi trạng thái — Mã đơn: <span style="color: #00f2fe; font-family: monospace; font-weight: 600;">@Model.Order?.Id</span>
+                Mã đơn: <span style="color: #00f2fe; font-family: monospace; font-weight: 600;">@Model.Order?.Id</span>
             </p>
         </div>
-        <a href="/Orders" class="btn-secondary-premium" style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Quay lại
-        </a>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="/AuditLog" class="btn-secondary-premium" style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                </svg>
+                Audit Log tổng
+            </a>
+            <a href="/Orders" class="btn-secondary-premium" style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Quay lại
+            </a>
+        </div>
     </div>
 
     @if (Model.Order != null)
     {
         <!-- Order Summary -->
-        <div style="background: rgba(0,242,254,0.04); border: 1px solid rgba(0,242,254,0.15); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <div style="background: rgba(0,242,254,0.04); border: 1px solid rgba(0,242,254,0.15); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
             <div>
                 <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Khách hàng</div>
                 <div style="font-weight: 600;">@Model.Order.CustomerName</div>
@@ -48,85 +63,188 @@
                 }
                 <span class="status-badge @bc">@Model.Order.Status</span>
             </div>
-        </div>
-    }
-
-    <!-- Timeline -->
-    @if (Model.Logs.Count == 0)
-    {
-        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" style="width:48px;height:48px;opacity:0.3;margin:0 auto 12px;display:block;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p style="font-size:0.95rem;">Chưa có lịch sử thay đổi trạng thái nào.<br><span style="font-size:0.8rem;">Lịch sử sẽ được ghi lại từ lần sửa đơn tiếp theo.</span></p>
-        </div>
-    }
-    else
-    {
-        <div class="audit-timeline">
-            @foreach (var log in Model.Logs)
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Ngày tạo</div>
+                <div style="font-weight: 600;">@(Model.Order.CreatedAt == default ? "-" : Model.Order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"))</div>
+            </div>
+            @if (Model.Order.UpdatedAt.HasValue)
             {
-                string fromBc = log.OldStatus switch {
-                    "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
-                    "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
-                };
-                string toBc = log.NewStatus switch {
-                    "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
-                    "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
-                };
-                <div class="audit-item">
-                    <div class="audit-dot"></div>
-                    <div class="audit-content">
-                        <div class="audit-header">
-                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                                <span class="status-badge @fromBc" style="font-size: 0.75rem;">@log.OldStatus</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;color:var(--text-muted);">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                                </svg>
-                                <span class="status-badge @toBc" style="font-size: 0.75rem;">@log.NewStatus</span>
-                            </div>
-                            <span class="audit-time">@log.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
-                        </div>
-                        @if (!string.IsNullOrEmpty(log.Note))
-                        {
-                            <div class="audit-note">@log.Note</div>
-                        }
-                    </div>
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px;">Cập nhật lần cuối</div>
+                    <div style="font-weight: 600;">@Model.Order.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
                 </div>
             }
         </div>
     }
+
+    <!-- Tab selector -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;" id="log-tabs">
+        <button class="log-tab active" onclick="switchTab('audit')" id="tab-audit">
+            🔍 Audit Log mới <span class="tab-count">@Model.AuditLogs.Count</span>
+        </button>
+        <button class="log-tab" onclick="switchTab('status')" id="tab-status">
+            📋 Lịch sử trạng thái (cũ) <span class="tab-count">@Model.StatusLogs.Count</span>
+        </button>
+    </div>
+
+    <!-- ── AUDIT LOG (new) ── -->
+    <div id="panel-audit">
+        @if (Model.AuditLogs.Count == 0)
+        {
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" style="width:48px;height:48px;opacity:0.3;margin:0 auto 12px;display:block;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p style="font-size:0.95rem;">Chưa có audit log.<br><span style="font-size:0.8rem;">Audit log sẽ được ghi tự động từ thao tác tiếp theo.</span></p>
+            </div>
+        }
+        else
+        {
+            <div class="audit-timeline">
+                @foreach (var log in Model.AuditLogs)
+                {
+                    string actionClass = log.Action switch { "Create" => "action-create", "Update" => "action-update", "Delete" => "action-delete", _ => "action-update" };
+                    string actionLabel = log.Action switch { "Create" => "Tạo mới", "Update" => "Cập nhật", "Delete" => "Xóa", _ => log.Action };
+                    string actionIcon = log.Action switch { "Create" => "✨", "Update" => "✏️", "Delete" => "🗑️", _ => "📝" };
+                    <div class="audit-item">
+                        <div class="audit-dot @actionClass"></div>
+                        <div class="audit-content">
+                            <div class="audit-header">
+                                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                    <span class="action-badge @actionClass">@actionIcon @actionLabel</span>
+                                    <span style="font-size:0.82rem;color:var(--text-muted);">Đơn hàng · <code style="font-size:0.78rem;color:#00f2fe;">@log.EntityId</code></span>
+                                </div>
+                                <span class="audit-time">@log.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(log.OldValues) || !string.IsNullOrEmpty(log.NewValues))
+                            {
+                                <div class="audit-values-toggle" onclick="toggleValues(this)">
+                                    <span>▶ Xem chi tiết thay đổi</span>
+                                </div>
+                                <div class="audit-values hidden">
+                                    @if (!string.IsNullOrEmpty(log.OldValues))
+                                    {
+                                        <div class="audit-val-block old">
+                                            <div class="val-label">Trước</div>
+                                            <pre>@log.OldValues</pre>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(log.NewValues))
+                                    {
+                                        <div class="audit-val-block new">
+                                            <div class="val-label">Sau</div>
+                                            <pre>@log.NewValues</pre>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(log.Note))
+                            {
+                                <div class="audit-note">@log.Note</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- ── STATUS LOG (legacy) ── -->
+    <div id="panel-status" style="display:none;">
+        @if (Model.StatusLogs.Count == 0)
+        {
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <p style="font-size:0.95rem;">Chưa có lịch sử thay đổi trạng thái.</p>
+            </div>
+        }
+        else
+        {
+            <div class="audit-timeline">
+                @foreach (var log in Model.StatusLogs)
+                {
+                    string fromBc = log.OldStatus switch {
+                        "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
+                        "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
+                    };
+                    string toBc = log.NewStatus switch {
+                        "Chờ đặt" => "pending", "Đã đặt" => "ordered", "Đang về" => "shipping",
+                        "Đã về" => "arrived", "Đã giao" => "delivered", "Hủy" => "cancelled", _ => "pending"
+                    };
+                    <div class="audit-item">
+                        <div class="audit-dot action-update"></div>
+                        <div class="audit-content">
+                            <div class="audit-header">
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <span class="status-badge @fromBc" style="font-size: 0.75rem;">@log.OldStatus</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;color:var(--text-muted);">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                    </svg>
+                                    <span class="status-badge @toBc" style="font-size: 0.75rem;">@log.NewStatus</span>
+                                </div>
+                                <span class="audit-time">@log.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(log.Note))
+                            {
+                                <div class="audit-note">@log.Note</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 <style>
-    .audit-timeline {
-        position: relative;
-        padding-left: 28px;
+    /* Tab buttons */
+    .log-tab {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
+    .log-tab:hover { border-color: rgba(0,242,254,0.3); color: var(--text-color); }
+    .log-tab.active {
+        background: rgba(0,242,254,0.08);
+        border-color: rgba(0,242,254,0.4);
+        color: #00f2fe;
+    }
+    .tab-count {
+        background: rgba(0,242,254,0.15);
+        color: #00f2fe;
+        border-radius: 20px;
+        padding: 1px 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    /* Timeline */
+    .audit-timeline { position: relative; padding-left: 28px; }
     .audit-timeline::before {
         content: '';
         position: absolute;
-        left: 8px;
-        top: 8px;
-        bottom: 8px;
-        width: 2px;
+        left: 8px; top: 8px; bottom: 8px; width: 2px;
         background: linear-gradient(to bottom, rgba(0,242,254,0.4), rgba(0,242,254,0.05));
         border-radius: 2px;
     }
-    .audit-item {
-        position: relative;
-        margin-bottom: 20px;
-    }
+    .audit-item { position: relative; margin-bottom: 20px; }
     .audit-dot {
         position: absolute;
-        left: -24px;
-        top: 14px;
-        width: 12px;
-        height: 12px;
+        left: -24px; top: 14px;
+        width: 12px; height: 12px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #00f2fe, #4facfe);
-        box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
     }
+    .audit-dot.action-create { background: linear-gradient(135deg, #00f2fe, #4facfe); box-shadow: 0 0 8px rgba(0,242,254,0.5); }
+    .audit-dot.action-update { background: linear-gradient(135deg, #f7971e, #ffd200); box-shadow: 0 0 8px rgba(247,151,30,0.5); }
+    .audit-dot.action-delete { background: linear-gradient(135deg, #ff4d4d, #f9004d); box-shadow: 0 0 8px rgba(255,77,77,0.5); }
+
     .audit-content {
         background: rgba(255,255,255,0.03);
         border: 1px solid var(--border-color);
@@ -134,9 +252,8 @@
         padding: 14px 16px;
         transition: border-color 0.2s ease;
     }
-    .audit-content:hover {
-        border-color: rgba(0, 242, 254, 0.2);
-    }
+    .audit-content:hover { border-color: rgba(0, 242, 254, 0.2); }
+
     .audit-header {
         display: flex;
         justify-content: space-between;
@@ -144,17 +261,48 @@
         flex-wrap: wrap;
         gap: 8px;
     }
-    .audit-time {
-        font-size: 0.78rem;
-        color: var(--text-muted);
-        white-space: nowrap;
-    }
+    .audit-time { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
     .audit-note {
-        margin-top: 8px;
-        font-size: 0.82rem;
-        color: var(--text-muted);
-        padding: 6px 10px;
-        background: rgba(0,0,0,0.15);
-        border-radius: 6px;
+        margin-top: 8px; font-size: 0.82rem; color: var(--text-muted);
+        padding: 6px 10px; background: rgba(0,0,0,0.15); border-radius: 6px;
     }
+
+    /* Action badges */
+    .action-badge { font-size: 0.75rem; border-radius: 6px; padding: 3px 10px; font-weight: 600; }
+    .action-badge.action-create { background: rgba(0,242,254,0.12); color: #00f2fe; border: 1px solid rgba(0,242,254,0.3); }
+    .action-badge.action-update { background: rgba(247,151,30,0.12); color: #f7971e; border: 1px solid rgba(247,151,30,0.3); }
+    .action-badge.action-delete { background: rgba(255,77,77,0.12); color: #ff4d4d; border: 1px solid rgba(255,77,77,0.3); }
+
+    /* Values diff */
+    .audit-values-toggle {
+        margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);
+        cursor: pointer; user-select: none; padding: 4px 0;
+        transition: color 0.15s;
+    }
+    .audit-values-toggle:hover { color: #00f2fe; }
+    .audit-values { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .audit-values.hidden { display: none; }
+    @@media (max-width: 600px) { .audit-values { grid-template-columns: 1fr; } }
+    .audit-val-block { border-radius: 8px; padding: 10px; overflow: auto; max-height: 220px; }
+    .audit-val-block.old { background: rgba(255,77,77,0.06); border: 1px solid rgba(255,77,77,0.2); }
+    .audit-val-block.new  { background: rgba(0,242,254,0.06); border: 1px solid rgba(0,242,254,0.2); }
+    .val-label { font-size: 0.72rem; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; opacity: .7; }
+    .audit-val-block.old .val-label { color: #ff4d4d; }
+    .audit-val-block.new  .val-label { color: #00f2fe; }
+    .audit-val-block pre { margin: 0; font-size: 0.75rem; font-family: monospace; color: var(--text-color); white-space: pre-wrap; word-break: break-all; }
 </style>
+
+<script>
+function switchTab(name) {
+    document.getElementById('panel-audit').style.display  = (name === 'audit')  ? '' : 'none';
+    document.getElementById('panel-status').style.display = (name === 'status') ? '' : 'none';
+    document.getElementById('tab-audit').classList.toggle('active', name === 'audit');
+    document.getElementById('tab-status').classList.toggle('active', name === 'status');
+}
+
+function toggleValues(el) {
+    const panel = el.nextElementSibling;
+    const isHidden = panel.classList.toggle('hidden');
+    el.querySelector('span').textContent = isHidden ? '▶ Xem chi tiết thay đổi' : '▼ Ẩn chi tiết';
+}
+</script>
