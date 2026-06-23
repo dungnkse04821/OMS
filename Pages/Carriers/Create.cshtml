@@ -1,0 +1,34 @@
+@page
+@model OMS.Pages.Carriers.CreateModel
+@{ ViewData["Title"] = "Thêm đơn vị vận chuyển"; }
+
+<div class="glass-card" style="max-width:600px;margin:0 auto;">
+    <div style="margin-bottom:1.5rem;">
+        <h1 class="page-title">➕ Thêm đơn vị vận chuyển</h1>
+        <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Định nghĩa đơn vị vận chuyển mới với URL tra cứu tự động.</p>
+    </div>
+    <form method="post">
+        <div class="form-group">
+            <label asp-for="Carrier.Name" class="form-label"></label>
+            <input asp-for="Carrier.Name" class="form-input" placeholder="VD: Viettel Post, DHL, FedEx..." />
+            <span asp-validation-for="Carrier.Name" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Carrier.TrackingUrlPattern" class="form-label"></label>
+            <input asp-for="Carrier.TrackingUrlPattern" class="form-input" placeholder="VD: https://my-carrier.vn/track?id={code}" />
+            <span asp-validation-for="Carrier.TrackingUrlPattern" class="text-danger"></span>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:5px;">
+                Dùng <code style="color:#4facfe;">{code}</code> làm placeholder cho mã vận đơn. Để trống → fallback Google Search.
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="Carrier.SortOrder" class="form-label"></label>
+            <input asp-for="Carrier.SortOrder" class="form-input" type="number" min="1" max="999" />
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:30px;">
+            <a href="/Carriers" class="btn-secondary-premium" style="padding:10px 20px;">Hủy</a>
+            <button type="submit" class="btn-premium" style="padding:10px 24px;">✅ Lưu</button>
+        </div>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

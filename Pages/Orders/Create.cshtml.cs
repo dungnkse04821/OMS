@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using OMS.Data;
 using OMS.Models;
 using OMS.Repositories;
 using System.Text.Json;
@@ -12,25 +13,27 @@ namespace OMS.Pages.Orders
         private readonly IOrderRepository _orderRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IProductRepository _productRepository;
+        private readonly ApplicationDbContext _ctx;
 
         public CreateModel(
             IOrderRepository orderRepository,
             ICustomerRepository customerRepository,
-            IProductRepository productRepository)
+            IProductRepository productRepository,
+            ApplicationDbContext ctx)
         {
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
             _productRepository = productRepository;
+            _ctx = ctx;
         }
 
         [BindProperty]
         public Order Order { get; set; } = new();
 
-        // Dropdowns data
         public List<Customer> Customers { get; set; } = new();
         public List<Product> Products { get; set; } = new();
-        
-        // Serialized JSON data for auto-population in Javascript
+        public List<Carrier> Carriers { get; set; } = new();
+
         public string CustomersJson { get; set; } = "[]";
         public string ProductsJson { get; set; } = "[]";
 
@@ -39,31 +42,29 @@ namespace OMS.Pages.Orders
             Order.OrderDate = DateTime.Today;
             Order.Status = "Chờ đặt";
             Order.Quantity = 1;
-
             await LoadDropdownDataAsync();
         }
 
         private async Task LoadDropdownDataAsync()
         {
             Customers = await _customerRepository.GetAllAsync();
-            Products = await _productRepository.GetAllAsync();
+            Products  = await _productRepository.GetAllAsync();
+            Carriers  = await _ctx.Carriers.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
 
             CustomersJson = JsonSerializer.Serialize(Customers);
-            ProductsJson = JsonSerializer.Serialize(Products);
+            ProductsJson  = JsonSerializer.Serialize(Products);
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // Re-calculate math fields securely on server side
-            Order.TotalAmount = Order.SellingPrice * Order.Quantity;
-            Order.RemainingAmount = Order.TotalAmount - Order.Deposit - Order.Discount;
-            Order.TotalImportCost = Order.ImportPrice * Order.Quantity;
-            Order.Profit = Order.TotalAmount - Order.TotalImportCost;
+            Order.TotalAmount      = Order.SellingPrice * Order.Quantity;
+            Order.RemainingAmount  = Order.TotalAmount - Order.Deposit - Order.Discount;
+            Order.TotalImportCost  = Order.ImportPrice * Order.Quantity;
+            Order.Profit           = Order.TotalAmount - Order.TotalImportCost;
 
-            // Generate unique Order ID like DH0001
-            var existing = await _orderRepository.GetAllAsync();
+            var existing   = await _orderRepository.GetAllAsync();
             int nextNumber = existing.Count + 1;
-            string newId = $"DH{nextNumber:D4}";
+            string newId   = $"DH{nextNumber:D4}";
             while (existing.Any(o => o.Id == newId))
             {
                 nextNumber++;
@@ -71,7 +72,6 @@ namespace OMS.Pages.Orders
             }
             Order.Id = newId;
 
-            // Simple validation override (we recalculate fields above so they don't block validation if not present in binding)
             ModelState.Remove("Order.Id");
             ModelState.Remove("Order.TotalAmount");
             ModelState.Remove("Order.RemainingAmount");

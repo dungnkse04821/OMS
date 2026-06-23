@@ -1,0 +1,40 @@
+@page
+@model OMS.Pages.Carriers.EditModel
+@{ ViewData["Title"] = "Sửa đơn vị vận chuyển"; }
+
+<div class="glass-card" style="max-width:600px;margin:0 auto;">
+    <div style="margin-bottom:1.5rem;">
+        <h1 class="page-title">✏️ Sửa đơn vị vận chuyển</h1>
+        @if (Model.Carrier.IsSystem)
+        {
+            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--warning);border-radius:8px;padding:10px 14px;font-size:0.82rem;margin-top:8px;">
+                ⚠️ Đây là carrier hệ thống. Bạn vẫn có thể sửa URL tra cứu hoặc thứ tự.
+            </div>
+        }
+    </div>
+    <form method="post">
+        <input type="hidden" asp-for="Carrier.Id" />
+        <div class="form-group">
+            <label asp-for="Carrier.Name" class="form-label"></label>
+            <input asp-for="Carrier.Name" class="form-input" placeholder="Tên đơn vị vận chuyển..." />
+            <span asp-validation-for="Carrier.Name" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Carrier.TrackingUrlPattern" class="form-label"></label>
+            <input asp-for="Carrier.TrackingUrlPattern" class="form-input" placeholder="VD: https://my-carrier.vn/track?id={code}" />
+            <span asp-validation-for="Carrier.TrackingUrlPattern" class="text-danger"></span>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:5px;">
+                Dùng <code style="color:#4facfe;">{code}</code> làm placeholder. Để trống → fallback Google Search.
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="Carrier.SortOrder" class="form-label"></label>
+            <input asp-for="Carrier.SortOrder" class="form-input" type="number" min="1" max="999" />
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:30px;">
+            <a href="/Carriers" class="btn-secondary-premium" style="padding:10px 20px;">Hủy</a>
+            <button type="submit" class="btn-premium" style="padding:10px 24px;">✅ Cập nhật</button>
+        </div>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

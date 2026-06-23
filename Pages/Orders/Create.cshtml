@@ -208,28 +208,35 @@
                 <label asp-for="Order.ShippingCarrier" class="form-label"></label>
                 <select asp-for="Order.ShippingCarrier" class="form-input" id="order-carrier">
                     <option value="">-- Chọn đơn vị vận chuyển --</option>
-                    <option value="GHTK">GHTK (Giao Hàng Tiết Kiệm)</option>
-                    <option value="GHN">GHN (Giao Hàng Nhanh)</option>
-                    <option value="Viettel Post">Viettel Post</option>
-                    <option value="Vietnam Post">Vietnam Post (EMS)</option>
-                    <option value="J&T Express">J&T Express</option>
-                    <option value="Best Express">Best Express</option>
-                    <option value="Ninja Van">Ninja Van</option>
-                    <option value="SPX Express">SPX Express (Shopee)</option>
-                    <option value="Lazada Logistics">Lazada Logistics</option>
-                    <option value="Tiki Now">Tiki Now</option>
-                    <option value="Khác">Khác</option>
+                    @foreach (var c in Model.Carriers)
+                    {
+                        <option value="@c.Name">@c.Name</option>
+                    }
                 </select>
                 <span asp-validation-for="Order.ShippingCarrier" class="text-danger"></span>
+                <div style="margin-top:6px;">
+                    <a href="/Carriers" target="_blank" style="font-size:0.75rem;color:var(--text-muted);text-decoration:none;">
+                        ⚙️ Quản lý đơn vị vận chuyển →
+                    </a>
+                </div>
             </div>
 
             <div class="form-group">
                 <label asp-for="Order.TrackingCode" class="form-label"></label>
-                <div style="position: relative;">
-                    <input asp-for="Order.TrackingCode" id="order-tracking-code" class="form-input" placeholder="Nhập mã vận đơn..." style="padding-right: 110px;" />
-                    <button type="button" id="btn-track-preview" onclick="openTrackingUrl()" class="btn-secondary-premium"
-                        style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 6px 12px; font-size: 0.78rem; border-radius: 6px;">
-                        🔍 Tra cứu
+                <div style="position: relative; display:flex; gap:6px; align-items:center;">
+                    <div style="position:relative;flex:1;">
+                        <input asp-for="Order.TrackingCode" id="order-tracking-code" class="form-input" placeholder="Nhập mã vận đơn..." style="padding-right: 110px;" />
+                        <button type="button" id="btn-track-preview" onclick="openTrackingUrl()" class="btn-secondary-premium"
+                            style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 6px 12px; font-size: 0.78rem; border-radius: 6px;">
+                            🔍 Tra cứu
+                        </button>
+                    </div>
+                    <button type="button" onclick="copyTrackingForm()" class="btn-secondary-premium"
+                            title="Sao chép mã vận đơn"
+                            style="padding:11px 13px;border-radius:8px;flex-shrink:0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                        </svg>
                     </button>
                 </div>
                 <span asp-validation-for="Order.TrackingCode" class="text-danger"></span>
@@ -273,15 +280,29 @@
             const carrier = document.getElementById('order-carrier')?.value || '';
             const code = (document.getElementById('order-tracking-code')?.value || '').trim();
             if (!code) {
-                alert('Vui lòng nhập Mã vận đơn trước khi tra cứu.');
+                OmsToast.warning('Thiếu mã', 'Vui lòng nhập Mã vận đơn trước khi tra cứu.');
                 return;
             }
             const builder = CARRIER_TRACKING_URLS[carrier];
             if (builder) {
                 window.open(builder(code), '_blank');
             } else {
-                // Fallback: Google search the tracking code
                 window.open(`https://www.google.com/search?q=${encodeURIComponent(code + ' tracking')}`, '_blank');
+            }
+        }
+
+        function copyTrackingForm() {
+            const code = (document.getElementById('order-tracking-code')?.value || '').trim();
+            if (!code) { OmsToast.warning('Chưa có mã', 'Nhập mã vận đơn trước.'); return; }
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => OmsToast.success('Đã sao chép!', code));
+            } else {
+                const ta = Object.assign(document.createElement('textarea'), { value: code });
+                ta.style.cssText = 'position:fixed;top:-9999px';
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                OmsToast.success('Đã sao chép!', code);
             }
         }
     </script>

@@ -14,6 +14,7 @@ namespace OMS.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<OrderLog> OrderLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Carrier> Carriers { get; set; }
 
         // ── Global Query Filters: automatically exclude soft-deleted records ──────
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,6 +24,22 @@ namespace OMS.Data
             modelBuilder.Entity<Order>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Customer>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Product>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Carrier>().HasQueryFilter(e => !e.IsDeleted);
+
+            // ── Seed default system carriers ──────────────────────────────
+            modelBuilder.Entity<Carrier>().HasData(
+                new Carrier { Id = 1,  Name = "GHTK",             TrackingUrlPattern = "https://i.ghtk.vn/{code}",                                              IsSystem = true, SortOrder = 1 },
+                new Carrier { Id = 2,  Name = "GHN",              TrackingUrlPattern = "https://donhang.ghn.vn/?order_code={code}",                             IsSystem = true, SortOrder = 2 },
+                new Carrier { Id = 3,  Name = "Viettel Post",     TrackingUrlPattern = "https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/?billCode={code}",    IsSystem = true, SortOrder = 3 },
+                new Carrier { Id = 4,  Name = "Vietnam Post",     TrackingUrlPattern = "https://www.vnpost.vn/vi-vn/dinh-vi/buu-pham?key={code}",              IsSystem = true, SortOrder = 4 },
+                new Carrier { Id = 5,  Name = "J&T Express",      TrackingUrlPattern = "https://jtexpress.vn/tracking?bills={code}",                           IsSystem = true, SortOrder = 5 },
+                new Carrier { Id = 6,  Name = "Best Express",     TrackingUrlPattern = "https://best-inc-vn.com/track?bills={code}",                           IsSystem = true, SortOrder = 6 },
+                new Carrier { Id = 7,  Name = "Ninja Van",        TrackingUrlPattern = "https://www.ninjavan.co/vi-vn/tracking?id={code}",                     IsSystem = true, SortOrder = 7 },
+                new Carrier { Id = 8,  Name = "SPX Express",      TrackingUrlPattern = "https://spx.vn/tracking/?trackingNumber={code}",                       IsSystem = true, SortOrder = 8 },
+                new Carrier { Id = 9,  Name = "Lazada Logistics", TrackingUrlPattern = "https://www.lazada.vn/order/{code}/",                                  IsSystem = true, SortOrder = 9 },
+                new Carrier { Id = 10, Name = "Tiki Now",         TrackingUrlPattern = "https://tiki.vn/tracking?orderCode={code}",                            IsSystem = true, SortOrder = 10 },
+                new Carrier { Id = 11, Name = "Khác",             TrackingUrlPattern = null,                                                                   IsSystem = true, SortOrder = 99 }
+            );
         }
 
         // ── Override SaveChangesAsync: soft-delete interception + audit logging ──

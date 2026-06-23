@@ -1,0 +1,169 @@
+@page
+@model OMS.Pages.Orders.ImportTrackingModel
+@{
+    ViewData["Title"] = "Import mã vận đơn hàng loạt";
+}
+
+<div class="glass-card" style="max-width:860px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;margin-bottom:1.5rem;">
+        <div>
+            <h1 class="page-title">📦 Import Tracking Hàng Loạt</h1>
+            <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Tải lên file CSV để cập nhật mã vận đơn cho nhiều đơn hàng cùng lúc.</p>
+        </div>
+        <a href="/Orders" class="btn-secondary-premium" style="padding:10px 16px;display:inline-flex;align-items:center;gap:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Quay lại
+        </a>
+    </div>
+
+    @if (Model.Errors.Count > 0)
+    {
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+            @foreach (var err in Model.Errors)
+            {
+                <div style="color:var(--danger);font-size:0.88rem;margin-bottom:4px;">⚠️ @err</div>
+            }
+        </div>
+    }
+
+    @if (Model.ImportDone)
+    {
+        <!-- Import Results -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+            <div style="flex:1;min-width:140px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;text-align:center;">
+                <div style="font-size:2rem;font-weight:700;color:var(--success);">@Model.UpdatedCount</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Đã cập nhật</div>
+            </div>
+            <div style="flex:1;min-width:140px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:16px;text-align:center;">
+                <div style="font-size:2rem;font-weight:700;color:var(--danger);">@Model.NotFoundCount</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Không tìm thấy</div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table" style="font-size:0.85rem;">
+                <thead>
+                    <tr>
+                        <th>Dòng</th>
+                        <th>Mã ĐH</th>
+                        <th>Mã vận đơn</th>
+                        <th>Đơn vị VC</th>
+                        <th>Kết quả</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.PreviewRows)
+                    {
+                        <tr>
+                            <td style="color:var(--text-muted);">@row.LineNumber</td>
+                            <td style="font-family:monospace;color:#4facfe;">@row.OrderId</td>
+                            <td style="font-family:monospace;">@row.TrackingCode</td>
+                            <td style="color:var(--text-muted);">@(row.ShippingCarrier ?? "—")</td>
+                            <td>@row.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+            <a href="/Orders" class="btn-premium" style="padding:10px 24px;">Xem danh sách đơn hàng</a>
+            <a href="/Orders/ImportTracking" class="btn-secondary-premium" style="padding:10px 20px;">Import tiếp</a>
+        </div>
+    }
+    else
+    {
+        <!-- Upload form -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;" class="import-guide-grid">
+            <!-- Format Guide -->
+            <div style="background:rgba(0,242,254,0.04);border:1px solid rgba(0,242,254,0.15);border-radius:12px;padding:18px;">
+                <div style="font-weight:600;margin-bottom:12px;color:#00f2fe;">📋 Định dạng file CSV</div>
+                <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 10px;">Cột bắt buộc: <code style="color:#00f2fe;">OrderId</code>, <code style="color:#00f2fe;">TrackingCode</code><br>Cột tuỳ chọn: <code style="color:#4facfe;">ShippingCarrier</code></p>
+                <pre style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;font-size:0.78rem;color:var(--text-muted);margin:0;overflow:auto;">OrderId,TrackingCode,ShippingCarrier
+DH0001,GHTK123456,GHTK
+DH0002,GHN789012,GHN
+DH0003,VTP345678,Viettel Post</pre>
+            </div>
+
+            <!-- Carrier list reference -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:12px;padding:18px;overflow:auto;max-height:220px;">
+                <div style="font-weight:600;margin-bottom:12px;color:var(--text-primary);">🚚 Tên đơn vị vận chuyển hợp lệ</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    @foreach (var c in Model.Carriers)
+                    {
+                        <span style="background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:6px;padding:3px 10px;font-size:0.75rem;font-family:monospace;">@c.Name</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="import-form">
+            <div class="form-group">
+                <label class="form-label">Chọn file CSV</label>
+                <div id="drop-zone" style="border:2px dashed rgba(0,242,254,0.3);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all 0.2s ease;background:rgba(0,242,254,0.02);"
+                     onclick="document.getElementById('csv-file-input').click();">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:40px;height:40px;color:rgba(0,242,254,0.4);margin:0 auto 12px;display:block;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <div style="color:var(--text-muted);font-size:0.9rem;" id="drop-label">
+                        Kéo thả file CSV vào đây, hoặc <span style="color:#00f2fe;">click để chọn file</span>
+                    </div>
+                    <div id="selected-file" style="margin-top:8px;font-size:0.82rem;color:#00f2fe;display:none;"></div>
+                </div>
+                <input id="csv-file-input" type="file" name="csvFile" accept=".csv" style="display:none;" />
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:10px;">
+                <button type="submit" class="btn-premium" id="btn-import" style="padding:11px 28px;" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:17px;height:17px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12M12 16.5V3" />
+                    </svg>
+                    Import hàng loạt
+                </button>
+            </div>
+        </form>
+    }
+</div>
+
+<style>
+    #drop-zone:hover  { border-color: rgba(0,242,254,0.6); background: rgba(0,242,254,0.05); }
+    #drop-zone.dragover { border-color: #00f2fe; background: rgba(0,242,254,0.08); }
+    @@media (max-width: 600px) { .import-guide-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+<script>
+const fileInput = document.getElementById('csv-file-input');
+const dropZone  = document.getElementById('drop-zone');
+const dropLabel = document.getElementById('drop-label');
+const selFile   = document.getElementById('selected-file');
+const btnImport = document.getElementById('btn-import');
+
+fileInput.addEventListener('change', function () {
+    if (this.files[0]) showFile(this.files[0]);
+});
+
+// Drag-and-drop
+dropZone.addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', function () { this.classList.remove('dragover'); });
+dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        showFile(file);
+    } else {
+        OmsToast.warning('Định dạng không hợp lệ', 'Chỉ chấp nhận file .csv');
+    }
+});
+
+function showFile(file) {
+    selFile.textContent = '📄 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    selFile.style.display = 'block';
+    dropLabel.style.display = 'none';
+    btnImport.disabled = false;
+}
+</script>
