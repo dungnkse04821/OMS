@@ -13,7 +13,7 @@
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
             <!-- CSV Export Button -->
             <a id="btn-export-csv"
-               href="/Orders/Export?statusFilter=@(Model.StatusFilter ?? "")&searchQuery=@(Model.SearchQuery ?? "")"
+               href="/Orders/Export?@(string.Join("&", Model.StatusFilters.Select(s => "statusFilters=" + s)))&searchQuery=@(Model.SearchQuery ?? "")"
                class="btn-secondary-premium"
                style="padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem;">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">
@@ -41,43 +41,43 @@
 
     <!-- Quick Status Filters Widget -->
     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 24px; gap: 12px;">
-        <a href="/Orders" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(string.IsNullOrEmpty(Model.StatusFilter) ? "#00f2fe" : "var(--border-color)")">
+        <a href="/Orders" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(!Model.StatusFilters.Any() ? "#00f2fe" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem;">Tất cả</span>
                 <span class="stat-value" style="font-size: 1.25rem;">@Model.TotalCount</span>
             </div>
         </a>
-        <a href="/Orders?StatusFilter=Chờ đặt" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Chờ đặt" ? "var(--warning)" : "var(--border-color)")">
+        <a href="/Orders?StatusFilters=Chờ đặt" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilters.Contains("Chờ đặt") ? "var(--warning)" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem; color: var(--warning);">Chờ đặt</span>
                 <span class="stat-value" style="font-size: 1.25rem; color: var(--warning);">@Model.PendingCount</span>
             </div>
         </a>
-        <a href="/Orders?StatusFilter=Đã đặt" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đã đặt" ? "var(--purple)" : "var(--border-color)")">
+        <a href="/Orders?StatusFilters=Đã đặt" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilters.Contains("Đã đặt") ? "var(--purple)" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem; color: var(--purple);">Đã đặt</span>
                 <span class="stat-value" style="font-size: 1.25rem; color: var(--purple);">@Model.OrderedCount</span>
             </div>
         </a>
-        <a href="/Orders?StatusFilter=Đang về" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đang về" ? "var(--info)" : "var(--border-color)")">
+        <a href="/Orders?StatusFilters=Đang về" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilters.Contains("Đang về") ? "var(--info)" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem; color: var(--info);">Đang về</span>
                 <span class="stat-value" style="font-size: 1.25rem; color: var(--info);">@Model.ShippingCount</span>
             </div>
         </a>
-        <a href="/Orders?StatusFilter=Đã về" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đã về" ? "#00f2fe" : "var(--border-color)")">
+        <a href="/Orders?StatusFilters=Đã về" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilters.Contains("Đã về") ? "#00f2fe" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem; color: #00f2fe;">Đã về</span>
                 <span class="stat-value" style="font-size: 1.25rem; color: #00f2fe;">@Model.ArrivedCount</span>
             </div>
         </a>
-        <a href="/Orders?StatusFilter=Đã giao" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Đã giao" ? "var(--success)" : "var(--border-color)")">
+        <a href="/Orders?StatusFilters=Đã giao" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilters.Contains("Đã giao") ? "var(--success)" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem; color: var(--success);">Đã giao</span>
                 <span class="stat-value" style="font-size: 1.25rem; color: var(--success);">@Model.DeliveredCount</span>
             </div>
         </a>
-        <a href="/Orders?StatusFilter=Hủy" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilter == "Hủy" ? "var(--danger)" : "var(--border-color)")">
+        <a href="/Orders?StatusFilters=Hủy" class="glass-card stat-card" style="padding: 12px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border-color: @(Model.StatusFilters.Contains("Hủy") ? "var(--danger)" : "var(--border-color)")">
             <div class="stat-info">
                 <span class="stat-label" style="font-size: 0.75rem; color: var(--danger);">Hủy</span>
                 <span class="stat-value" style="font-size: 1.25rem; color: var(--danger);">@Model.CancelledCount</span>
@@ -85,29 +85,79 @@
         </a>
     </div>
 
-    <!-- Search bar -->
+    <!-- Filter bar -->
     <form method="get" class="filter-bar" style="margin-bottom: 24px;">
-        <input type="hidden" name="StatusFilter" value="@Model.StatusFilter" />
-        <div class="filter-item" style="display: flex; gap: 10px;">
-            <input type="text" asp-for="SearchQuery" class="form-input" placeholder="Tìm kiếm theo mã đơn, khách hàng, số điện thoại, SKU..." style="flex-grow: 1;" />
-            <button type="submit" class="btn-secondary-premium" style="padding: 12px 20px;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
-                </svg>
-                Tìm
-            </button>
-            @if (!string.IsNullOrEmpty(Model.SearchQuery) || !string.IsNullOrEmpty(Model.StatusFilter))
-            {
-                <a href="/Orders" class="btn-secondary-premium" style="padding: 12px 20px; display: inline-flex; align-items: center; justify-content: center;">Đặt lại</a>
-            }
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%; align-items: flex-end;">
+            <!-- Full-text Search -->
+            <div class="filter-item" style="flex-grow: 2; min-width: 250px;">
+                <label class="form-label" style="font-size: 0.75rem;">Tìm kiếm</label>
+                <input type="text" asp-for="SearchQuery" class="form-input" placeholder="Từ khóa..." />
+            </div>
+
+            <!-- Date Range -->
+            <div class="filter-item" style="flex-grow: 1;">
+                <label class="form-label" style="font-size: 0.75rem;">Từ ngày</label>
+                <input type="date" asp-for="FromDate" class="form-input" />
+            </div>
+            <div class="filter-item" style="flex-grow: 1;">
+                <label class="form-label" style="font-size: 0.75rem;">Đến ngày</label>
+                <input type="date" asp-for="ToDate" class="form-input" />
+            </div>
+
+            <!-- Multi-select Status -->
+            <div class="filter-item" style="flex-grow: 1; min-width: 180px;">
+                <label class="form-label" style="font-size: 0.75rem;">Trạng thái</label>
+                <div class="oms-multiselect">
+                    <button type="button" class="form-input oms-multiselect-btn" data-default="Tất cả trạng thái">
+                        <span class="oms-multiselect-text">Tất cả trạng thái</span>
+                    </button>
+                    <div class="oms-multiselect-menu">
+                        @foreach (var status in OMS.Models.OrderStatusList.All)
+                        {
+                            <label class="oms-multiselect-item">
+                                <input type="checkbox" name="StatusFilters" value="@status" @(Model.StatusFilters.Contains(status) ? "checked" : "") />
+                                @status
+                            </label>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-select Carrier -->
+            <div class="filter-item" style="flex-grow: 1; min-width: 180px;">
+                <label class="form-label" style="font-size: 0.75rem;">Vận chuyển</label>
+                <div class="oms-multiselect">
+                    <button type="button" class="form-input oms-multiselect-btn" data-default="Tất cả HVC">
+                        <span class="oms-multiselect-text">Tất cả HVC</span>
+                    </button>
+                    <div class="oms-multiselect-menu">
+                        @foreach (var carrier in Model.Carriers)
+                        {
+                            <label class="oms-multiselect-item">
+                                <input type="checkbox" name="CarrierFilters" value="@carrier.Name" @(Model.CarrierFilters.Contains(carrier.Name) ? "checked" : "") />
+                                @carrier.Name
+                            </label>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="filter-item" style="flex-grow: 0; display: flex; gap: 10px;">
+                <button type="submit" class="btn-primary-premium" style="padding: 12px 20px;">Lọc</button>
+                <a href="/Orders" class="btn-secondary-premium" style="padding: 12px 20px;" title="Xóa bộ lọc">Xóa</a>
+            </div>
         </div>
     </form>
 
     <!-- Bulk Actions Toolbar (hidden by default, shown via JS) -->
     <form id="bulk-form" method="post" asp-page-handler="BulkUpdate" style="display:none; margin-bottom: 16px;">
         @Html.AntiForgeryToken()
-        <input type="hidden" name="StatusFilter" value="@Model.StatusFilter" />
+        @foreach (var s in Model.StatusFilters) { <input type="hidden" name="StatusFilters" value="@s" /> }
+        @foreach (var c in Model.CarrierFilters) { <input type="hidden" name="CarrierFilters" value="@c" /> }
         <input type="hidden" name="SearchQuery" value="@Model.SearchQuery" />
+        <input type="hidden" name="FromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+        <input type="hidden" name="ToDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
         <div class="bulk-toolbar" id="bulk-toolbar">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <span id="bulk-count-label" style="color: var(--text-muted); font-size: 0.875rem; white-space: nowrap;">

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using OMS.Data;
 using OMS.Models;
 using OMS.Repositories;
 
@@ -8,19 +10,31 @@ namespace OMS.Pages.Orders
     public class IndexModel : PageModel
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly ApplicationDbContext _ctx;
 
-        public IndexModel(IOrderRepository orderRepository)
+        public IndexModel(IOrderRepository orderRepository, ApplicationDbContext ctx)
         {
             _orderRepository = orderRepository;
+            _ctx = ctx;
         }
 
         public List<Order> Orders { get; set; } = new();
+        public List<Carrier> Carriers { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public string? SearchQuery { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public string? StatusFilter { get; set; }
+        public List<string> StatusFilters { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public List<string> CarrierFilters { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public DateTime? FromDate { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public DateTime? ToDate { get; set; }
 
         // Counts for KPI / quick statistics
         public int TotalCount { get; set; }
@@ -33,38 +47,26 @@ namespace OMS.Pages.Orders
 
         public async Task OnGetAsync()
         {
-            var list = await _orderRepository.GetAllAsync();
+            // Get carriers for the filter UI
+            Carriers = await _ctx.Carriers.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
 
-            // Calculate status counts on all orders before applying filters
-            TotalCount = list.Count;
-            PendingCount = list.Count(o => o.Status == "Chờ đặt");
-            OrderedCount = list.Count(o => o.Status == "Đã đặt");
-            ShippingCount = list.Count(o => o.Status == "Đang về");
-            ArrivedCount = list.Count(o => o.Status == "Đã về");
-            DeliveredCount = list.Count(o => o.Status == "Đã giao");
-            CancelledCount = list.Count(o => o.Status == "Hủy");
+            var result = await _orderRepository.SearchOrdersAsync(
+                SearchQuery, 
+                StatusFilters, 
+                CarrierFilters, 
+                FromDate, 
+                ToDate);
 
-            // Apply Status Filter
-            if (!string.IsNullOrWhiteSpace(StatusFilter))
-            {
-                list = list.Where(o => o.Status == StatusFilter).ToList();
-            }
+            Orders = result.Data;
+            var counts = result.StatusCounts;
 
-            // Apply Search Query
-            if (!string.IsNullOrWhiteSpace(SearchQuery))
-            {
-                var query = SearchQuery.Trim().ToLower();
-                list = list.Where(o =>
-                    o.Id.ToLower().Contains(query) ||
-                    o.CustomerName.ToLower().Contains(query) ||
-                    o.PhoneNumber.Contains(query) ||
-                    o.Code.ToLower().Contains(query) ||
-                    o.ProductName.ToLower().Contains(query)
-                ).ToList();
-            }
-
-            // Order by date descending by default (if set)
-            Orders = list.OrderByDescending(o => o.OrderDate ?? DateTime.MinValue).ToList();
+            TotalCount = counts.Values.Sum();
+            PendingCount = counts.GetValueOrDefault("Chờ đặt", 0);
+            OrderedCount = counts.GetValueOrDefault("Đã đặt", 0);
+            ShippingCount = counts.GetValueOrDefault("Đang về", 0);
+            ArrivedCount = counts.GetValueOrDefault("Đã về", 0);
+            DeliveredCount = counts.GetValueOrDefault("Đã giao", 0);
+            CancelledCount = counts.GetValueOrDefault("Hủy", 0);
         }
 
         // Bulk update handler — nhận danh sách ID và trạng thái mới
@@ -88,7 +90,7 @@ namespace OMS.Pages.Orders
                 }
             }
 
-            return RedirectToPage(new { StatusFilter, SearchQuery });
+            return RedirectToPage(new { SearchQuery, StatusFilters, CarrierFilters, FromDate, ToDate });
         }
     }
 }

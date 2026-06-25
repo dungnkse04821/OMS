@@ -85,5 +85,56 @@ namespace OMS.Repositories
             if (paidAmount.HasValue) order.Deposit = paidAmount.Value;
             await _context.SaveChangesAsync();
         }
+
+        public async Task<(List<Order> Data, Dictionary<string, int> StatusCounts)> SearchOrdersAsync(
+            string? query, 
+            List<string>? statuses, 
+            List<string>? carriers, 
+            DateTime? fromDate, 
+            DateTime? toDate)
+        {
+            IQueryable<Order> baseQuery = _context.Orders;
+
+            // 1. Date Filters
+            if (fromDate.HasValue)
+                baseQuery = baseQuery.Where(o => o.OrderDate >= fromDate.Value);
+            
+            if (toDate.HasValue)
+                baseQuery = baseQuery.Where(o => o.OrderDate <= toDate.Value);
+
+            // 2. Carrier Filters
+            if (carriers != null && carriers.Any())
+                baseQuery = baseQuery.Where(o => carriers.Contains(o.ShippingCarrier));
+
+            // 3. Text Search (using GIN tsvector index)
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var formattedQuery = query.Trim();
+                // WebSearchToTsQuery handles basic search logic gracefully (like quotes and operators)
+                baseQuery = baseQuery.Where(o => o.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", formattedQuery)));
+            }
+
+            // At this point, we calculate the status counts (KPIs) based on the date/carrier/search filters,
+            // BUT BEFORE applying the Status filter itself.
+            var statusCountsQuery = await baseQuery
+                .GroupBy(o => o.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var statusCounts = statusCountsQuery.ToDictionary(k => k.Status, v => v.Count);
+
+            // 4. Status Filter (applied after counting)
+            if (statuses != null && statuses.Any())
+            {
+                baseQuery = baseQuery.Where(o => statuses.Contains(o.Status));
+            }
+
+            // Default sorting
+            baseQuery = baseQuery.OrderByDescending(o => o.OrderDate ?? DateTime.MinValue);
+
+            var data = await baseQuery.ToListAsync();
+
+            return (data, statusCounts);
+        }
     }
 }

@@ -234,6 +234,78 @@
     })();
 
     /* ══════════════════════════════════════════════════════
+       MULTI-SELECT SYSTEM
+       ══════════════════════════════════════════════════════ */
+    var OmsMultiSelect = (function () {
+        function init() {
+            document.querySelectorAll('.oms-multiselect').forEach(function (container) {
+                if (container._omsMsInit) return;
+                container._omsMsInit = true;
+
+                var btn = container.querySelector('.oms-multiselect-btn');
+                var menu = container.querySelector('.oms-multiselect-menu');
+                var textSpan = btn.querySelector('.oms-multiselect-text');
+                var defaultText = btn.getAttribute('data-default') || 'Chọn...';
+                var checkboxes = menu.querySelectorAll('input[type="checkbox"]');
+
+                function updateLabel() {
+                    var selected = [];
+                    checkboxes.forEach(function (cb) {
+                        if (cb.checked) {
+                            var label = cb.closest('label').textContent.trim();
+                            selected.push(label);
+                        }
+                    });
+
+                    if (selected.length === 0) {
+                        textSpan.textContent = defaultText;
+                    } else if (selected.length === 1) {
+                        textSpan.textContent = selected[0];
+                    } else {
+                        textSpan.textContent = 'Đã chọn (' + selected.length + ')';
+                    }
+                }
+
+                // Initial label sync
+                updateLabel();
+
+                // Toggle menu
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var isOpen = menu.classList.contains('show');
+                    // close all others
+                    document.querySelectorAll('.oms-multiselect-menu.show').forEach(function (m) {
+                        m.classList.remove('show');
+                    });
+                    if (!isOpen) {
+                        menu.classList.add('show');
+                    }
+                });
+
+                // Checkbox change
+                checkboxes.forEach(function (cb) {
+                    cb.addEventListener('change', updateLabel);
+                });
+
+                // Prevent closing when clicking inside menu
+                menu.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+
+            // Close on outside click
+            document.addEventListener('click', function () {
+                document.querySelectorAll('.oms-multiselect-menu.show').forEach(function (m) {
+                    m.classList.remove('show');
+                });
+            });
+        }
+
+        return { init: init };
+    })();
+
+    /* ══════════════════════════════════════════════════════
        INIT — runs on DOMContentLoaded
        ══════════════════════════════════════════════════════ */
     document.addEventListener('DOMContentLoaded', function () {
@@ -245,7 +317,10 @@
             el.addEventListener('click', toggleTheme);
         });
 
-        // 3. Wire up delete confirmation links/buttons that use data-confirm
+        // 3. Init multi-selects
+        OmsMultiSelect.init();
+
+        // 4. Wire up delete confirmation links/buttons that use data-confirm
         //    e.g.: <a href="/Orders/Delete?id=X" data-confirm="Xóa đơn này?">Xóa</a>
         document.addEventListener('click', function (e) {
             var el = e.target.closest('[data-confirm]');

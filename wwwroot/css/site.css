@@ -635,6 +635,59 @@ select.form-input option, select.form-control option {
 .autocomplete-item.active .item-subtitle { color: rgba(0,242,254,0.7); }
 
 /* ════════════════════════════════════════════════════════════
+   MULTI-SELECT COMPONENT
+   ════════════════════════════════════════════════════════════ */
+.oms-multiselect {
+    position: relative;
+    width: 100%;
+}
+.oms-multiselect-btn {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; text-align: left;
+}
+.oms-multiselect-text {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.oms-multiselect-btn::after {
+    content: ''; border: solid var(--text-muted); border-width: 0 2px 2px 0;
+    display: inline-block; padding: 3px; transform: rotate(45deg);
+    margin-left: 8px; flex-shrink: 0;
+}
+.oms-multiselect-menu {
+    position: absolute; top: calc(100% + 5px); left: 0; right: 0;
+    background: var(--bg-sidebar); border: 1px solid var(--border-color);
+    border-radius: 8px; max-height: 250px; overflow-y: auto;
+    z-index: 1010; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    display: none; flex-direction: column; padding: 6px;
+    animation: fadeSlideDown var(--dur-fast) var(--ease-smooth) both;
+}
+.oms-multiselect-menu.show { display: flex; }
+.oms-multiselect-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; cursor: pointer; border-radius: 6px;
+    color: var(--text-primary); font-size: 0.9rem;
+    transition: background var(--dur-fast) var(--ease-smooth);
+}
+.oms-multiselect-item:hover { background: rgba(255,255,255,0.05); }
+[data-theme="light"] .oms-multiselect-item:hover { background: rgba(0,0,0,0.04); }
+
+/* Custom Checkbox */
+.oms-multiselect-item input[type="checkbox"] {
+    appearance: none; width: 16px; height: 16px; border: 1px solid var(--border-color);
+    border-radius: 4px; background: rgba(255,255,255,0.05); cursor: pointer;
+    position: relative; flex-shrink: 0;
+}
+.oms-multiselect-item input[type="checkbox"]:checked {
+    background: var(--primary); border-color: var(--primary);
+}
+.oms-multiselect-item input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; left: 4px; top: 1px;
+    width: 4px; height: 8px; border: solid white;
+    border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+
+/* ════════════════════════════════════════════════════════════
    REUSABLE MODAL COMPONENT
    ════════════════════════════════════════════════════════════ */
 

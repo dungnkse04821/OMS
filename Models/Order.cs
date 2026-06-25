@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NpgsqlTypes;
 
 namespace OMS.Models
 {
@@ -96,6 +97,9 @@ namespace OMS.Models
 
         [DisplayName("Mã vận đơn")]
         public string? TrackingCode { get; set; }
+
+        // ── PostgreSQL GIN Full-Text Search Vector ───────────────────────
+        public NpgsqlTsVector? SearchVector { get; set; }
 
         // ── Soft-delete & audit metadata ─────────────────────────────────
         public bool IsDeleted { get; set; } = false;

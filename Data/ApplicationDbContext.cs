@@ -22,6 +22,16 @@ namespace OMS.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Order>().HasQueryFilter(e => !e.IsDeleted);
+
+            // Configure GIN Full-Text Index for Orders
+            modelBuilder.Entity<Order>()
+                .HasGeneratedTsVectorColumn(
+                    p => p.SearchVector,
+                    "simple", // using 'simple' to allow prefix matching more easily, or 'english' for stemming
+                    p => new { p.Id, p.Code, p.ProductName, p.CustomerName, p.PhoneNumber, p.TrackingCode })
+                .HasIndex(p => p.SearchVector)
+                .HasMethod("GIN");
+
             modelBuilder.Entity<Customer>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Product>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Carrier>().HasQueryFilter(e => !e.IsDeleted);

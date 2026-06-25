@@ -12,5 +12,17 @@ namespace OMS.Repositories
         Task UpdateAsync(Order order);
         Task DeleteAsync(string id);
         Task BulkUpdateAsync(string id, string newStatus, DateTime? arrivalDate, decimal? importPrice, decimal? paidAmount);
+        
+        /// <summary>
+        /// Searches and filters orders at the database level.
+        /// Uses PostgreSQL GIN full-text search if query is provided.
+        /// Returns the filtered data and a dictionary of counts by Status for the current filter (ignoring status filters).
+        /// </summary>
+        Task<(List<Order> Data, Dictionary<string, int> StatusCounts)> SearchOrdersAsync(
+            string? query, 
+            List<string>? statuses, 
+            List<string>? carriers, 
+            DateTime? fromDate, 
+            DateTime? toDate);
     }
 }
