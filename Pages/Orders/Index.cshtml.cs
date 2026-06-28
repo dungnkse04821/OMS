@@ -36,6 +36,14 @@ namespace OMS.Pages.Orders
         [BindProperty(SupportsGet = true)]
         public DateTime? ToDate { get; set; }
 
+        // ── Pagination ──────────────────────────────────────────────────
+        [BindProperty(SupportsGet = true)]
+        public int CurrentPage { get; set; } = 1;
+
+        public int PageSize { get; set; } = 20;
+        public int TotalItems { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
+
         // Counts for KPI / quick statistics
         public int TotalCount { get; set; }
         public int PendingCount { get; set; }
@@ -50,14 +58,19 @@ namespace OMS.Pages.Orders
             // Get carriers for the filter UI
             Carriers = await _ctx.Carriers.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
 
+            if (CurrentPage < 1) CurrentPage = 1;
+
             var result = await _orderRepository.SearchOrdersAsync(
                 SearchQuery, 
                 StatusFilters, 
                 CarrierFilters, 
                 FromDate, 
-                ToDate);
+                ToDate,
+                CurrentPage,
+                PageSize);
 
             Orders = result.Data;
+            TotalItems = result.TotalCount;
             var counts = result.StatusCounts;
 
             TotalCount = counts.Values.Sum();
@@ -90,7 +103,34 @@ namespace OMS.Pages.Orders
                 }
             }
 
-            return RedirectToPage(new { SearchQuery, StatusFilters, CarrierFilters, FromDate, ToDate });
+            return RedirectToPage(new { SearchQuery, StatusFilters, CarrierFilters, FromDate, ToDate, CurrentPage });
+        }
+
+        /// <summary>
+        /// Builds a query string preserving all current filters + overriding the page number.
+        /// </summary>
+        public string BuildPageUrl(int page)
+        {
+            var queryParams = new List<string>();
+            
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+                queryParams.Add($"SearchQuery={Uri.EscapeDataString(SearchQuery)}");
+            
+            foreach (var s in StatusFilters)
+                queryParams.Add($"StatusFilters={Uri.EscapeDataString(s)}");
+            
+            foreach (var c in CarrierFilters)
+                queryParams.Add($"CarrierFilters={Uri.EscapeDataString(c)}");
+            
+            if (FromDate.HasValue)
+                queryParams.Add($"FromDate={FromDate.Value:yyyy-MM-dd}");
+            
+            if (ToDate.HasValue)
+                queryParams.Add($"ToDate={ToDate.Value:yyyy-MM-dd}");
+            
+            queryParams.Add($"CurrentPage={page}");
+            
+            return "/Orders?" + string.Join("&", queryParams);
         }
     }
 }

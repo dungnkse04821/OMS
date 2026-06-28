@@ -33,6 +33,15 @@ namespace OMS.Data
                 .HasIndex(p => p.SearchVector)
                 .HasMethod("GIN");
 
+            // B-tree indexes for pagination & filtering performance
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.CreatedAt)
+                .HasDatabaseName("IX_Orders_CreatedAt");
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.ShippingCarrier)
+                .HasDatabaseName("IX_Orders_ShippingCarrier");
+
             modelBuilder.Entity<Customer>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Product>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Carrier>().HasQueryFilter(e => !e.IsDeleted);

@@ -454,6 +454,64 @@
             }
         }
     </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="pagination-bar">
+            <div class="pagination-info">
+                Hiển thị <strong>@(((Model.CurrentPage - 1) * Model.PageSize) + 1)–@(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems))</strong> / <strong>@Model.TotalItems</strong> đơn hàng
+            </div>
+            <div class="pagination-controls">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a href="@Model.BuildPageUrl(1)" class="page-btn" title="Trang đầu">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>
+                    </a>
+                    <a href="@Model.BuildPageUrl(Model.CurrentPage - 1)" class="page-btn" title="Trang trước">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                    </a>
+                }
+
+                @{
+                    int windowSize = 5;
+                    int startPage = Math.Max(1, Model.CurrentPage - windowSize / 2);
+                    int endPage = Math.Min(Model.TotalPages, startPage + windowSize - 1);
+                    if (endPage - startPage < windowSize - 1)
+                    {
+                        startPage = Math.Max(1, endPage - windowSize + 1);
+                    }
+                }
+
+                @if (startPage > 1)
+                {
+                    <a href="@Model.BuildPageUrl(1)" class="page-btn">1</a>
+                    @if (startPage > 2) { <span class="page-ellipsis">…</span> }
+                }
+
+                @for (int p = startPage; p <= endPage; p++)
+                {
+                    <a href="@Model.BuildPageUrl(p)" class="page-btn @(p == Model.CurrentPage ? "active" : "")">@p</a>
+                }
+
+                @if (endPage < Model.TotalPages)
+                {
+                    @if (endPage < Model.TotalPages - 1) { <span class="page-ellipsis">…</span> }
+                    <a href="@Model.BuildPageUrl(Model.TotalPages)" class="page-btn">@Model.TotalPages</a>
+                }
+
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a href="@Model.BuildPageUrl(Model.CurrentPage + 1)" class="page-btn" title="Trang tiếp">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                    </a>
+                    <a href="@Model.BuildPageUrl(Model.TotalPages)" class="page-btn" title="Trang cuối">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 4.5l7.5 7.5-7.5 7.5m6-15l7.5 7.5-7.5 7.5" /></svg>
+                    </a>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 <style>

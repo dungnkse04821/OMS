@@ -45,5 +45,30 @@ namespace OMS.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<(List<Product> Data, int TotalCount)> SearchAsync(string? query, int page = 1, int pageSize = 20)
+        {
+            IQueryable<Product> q = _context.Products;
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var term = query.Trim().ToLower();
+                q = q.Where(p => 
+                    p.Sku.ToLower().Contains(term) || 
+                    p.Name.ToLower().Contains(term) || 
+                    p.Category.ToLower().Contains(term));
+            }
+
+            var totalCount = await q.CountAsync();
+
+            if (page < 1) page = 1;
+            var data = await q
+                .OrderBy(p => p.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalCount);
+        }
     }
 }

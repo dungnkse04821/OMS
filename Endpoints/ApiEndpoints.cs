@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using OMS.Data;
 using OMS.Models;
 using OMS.Repositories;
 
@@ -12,10 +14,22 @@ namespace OMS.Endpoints
             // Orders API
             var ordersGroup = apiGroup.MapGroup("/orders");
             
-            ordersGroup.MapGet("/", async (IOrderRepository repo) => 
+            ordersGroup.MapGet("/", async (
+                IOrderRepository repo,
+                string? query,
+                int page = 1,
+                int pageSize = 20) => 
             {
-                var orders = await repo.GetAllAsync();
-                return Results.Ok(orders);
+                if (pageSize > 100) pageSize = 100; // cap max page size
+                var result = await repo.SearchOrdersAsync(query, null, null, null, null, page, pageSize);
+                return Results.Ok(new
+                {
+                    data = result.Data,
+                    totalCount = result.TotalCount,
+                    page,
+                    pageSize,
+                    totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize)
+                });
             });
 
             ordersGroup.MapGet("/{id}", async (string id, IOrderRepository repo) => 
@@ -52,10 +66,40 @@ namespace OMS.Endpoints
             // Products API
             var productsGroup = apiGroup.MapGroup("/products");
 
-            productsGroup.MapGet("/", async (IProductRepository repo) => 
+            productsGroup.MapGet("/", async (
+                IProductRepository repo,
+                ApplicationDbContext ctx,
+                string? query,
+                int page = 1,
+                int pageSize = 20) => 
             {
-                var products = await repo.GetAllAsync();
-                return Results.Ok(products);
+                if (pageSize > 100) pageSize = 100;
+                IQueryable<Product> q = ctx.Products;
+
+                if (!string.IsNullOrWhiteSpace(query))
+                {
+                    var term = query.Trim().ToLower();
+                    q = q.Where(p => 
+                        p.Sku.ToLower().Contains(term) || 
+                        p.Name.ToLower().Contains(term) || 
+                        p.Category.ToLower().Contains(term));
+                }
+
+                var totalCount = await q.CountAsync();
+                var data = await q
+                    .OrderBy(p => p.Name)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return Results.Ok(new
+                {
+                    data,
+                    totalCount,
+                    page,
+                    pageSize,
+                    totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                });
             });
 
             productsGroup.MapGet("/{sku}", async (string sku, IProductRepository repo) => 

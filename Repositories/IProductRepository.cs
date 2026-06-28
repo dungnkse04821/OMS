@@ -11,5 +11,7 @@ namespace OMS.Repositories
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);
         Task DeleteAsync(string sku);
+        
+        Task<(List<Product> Data, int TotalCount)> SearchAsync(string? query, int page = 1, int pageSize = 20);
     }
 }

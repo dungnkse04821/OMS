@@ -86,12 +86,14 @@ namespace OMS.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<(List<Order> Data, Dictionary<string, int> StatusCounts)> SearchOrdersAsync(
+        public async Task<(List<Order> Data, int TotalCount, Dictionary<string, int> StatusCounts)> SearchOrdersAsync(
             string? query, 
             List<string>? statuses, 
             List<string>? carriers, 
             DateTime? fromDate, 
-            DateTime? toDate)
+            DateTime? toDate,
+            int page = 1,
+            int pageSize = 20)
         {
             IQueryable<Order> baseQuery = _context.Orders;
 
@@ -132,9 +134,18 @@ namespace OMS.Repositories
             // Default sorting
             baseQuery = baseQuery.OrderByDescending(o => o.OrderDate ?? DateTime.MinValue);
 
-            var data = await baseQuery.ToListAsync();
+            // 5. Get total count BEFORE pagination (for the pager UI)
+            var totalCount = await baseQuery.CountAsync();
 
-            return (data, statusCounts);
+            // 6. Server-side pagination
+            if (page < 1) page = 1;
+            var data = await baseQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalCount, statusCounts);
         }
     }
 }
+

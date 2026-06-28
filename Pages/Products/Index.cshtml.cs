@@ -19,22 +19,33 @@ namespace OMS.Pages.Products
         [BindProperty(SupportsGet = true)]
         public string? SearchQuery { get; set; }
 
+        // ── Pagination ──────────────────────────────────────────────────
+        [BindProperty(SupportsGet = true)]
+        public int CurrentPage { get; set; } = 1;
+
+        public int PageSize { get; set; } = 20;
+        public int TotalItems { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
+
         public async Task OnGetAsync()
         {
-            var list = await _productRepository.GetAllAsync();
+            if (CurrentPage < 1) CurrentPage = 1;
 
+            var result = await _productRepository.SearchAsync(SearchQuery, CurrentPage, PageSize);
+            Products = result.Data;
+            TotalItems = result.TotalCount;
+        }
+
+        public string BuildPageUrl(int page)
+        {
+            var queryParams = new List<string>();
+            
             if (!string.IsNullOrWhiteSpace(SearchQuery))
-            {
-                var query = SearchQuery.Trim().ToLower();
-                list = list.Where(p => 
-                    p.Sku.ToLower().Contains(query) || 
-                    p.Name.ToLower().Contains(query) || 
-                    p.Category.ToLower().Contains(query) || 
-                    p.Source.ToLower().Contains(query)
-                ).ToList();
-            }
-
-            Products = list;
+                queryParams.Add($"SearchQuery={Uri.EscapeDataString(SearchQuery)}");
+            
+            queryParams.Add($"CurrentPage={page}");
+            
+            return "/Products?" + string.Join("&", queryParams);
         }
     }
 }

@@ -14,15 +14,17 @@ namespace OMS.Repositories
         Task BulkUpdateAsync(string id, string newStatus, DateTime? arrivalDate, decimal? importPrice, decimal? paidAmount);
         
         /// <summary>
-        /// Searches and filters orders at the database level.
+        /// Searches and filters orders at the database level with server-side pagination.
         /// Uses PostgreSQL GIN full-text search if query is provided.
-        /// Returns the filtered data and a dictionary of counts by Status for the current filter (ignoring status filters).
+        /// Returns the paginated data, total count, and a dictionary of counts by Status.
         /// </summary>
-        Task<(List<Order> Data, Dictionary<string, int> StatusCounts)> SearchOrdersAsync(
+        Task<(List<Order> Data, int TotalCount, Dictionary<string, int> StatusCounts)> SearchOrdersAsync(
             string? query, 
             List<string>? statuses, 
             List<string>? carriers, 
             DateTime? fromDate, 
-            DateTime? toDate);
+            DateTime? toDate,
+            int page = 1,
+            int pageSize = 20);
     }
 }
