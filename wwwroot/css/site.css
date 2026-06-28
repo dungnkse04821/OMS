@@ -172,6 +172,74 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
+/* ── Sidebar User Info ────────────────────────────────────── */
+.sidebar-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+}
+.user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #00f2fe);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+    color: #0a0e17;
+    flex-shrink: 0;
+}
+.user-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.user-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.user-role-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    width: fit-content;
+}
+.role-admin { background: rgba(0,242,254,0.15); color: #00f2fe; }
+.role-staff { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+.role-viewer { background: rgba(162,155,254,0.15); color: #a29bfe; }
+.logout-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+[data-theme="light"] .sidebar-user-info {
+    background: rgba(0,0,0,0.03);
+}
+[data-theme="light"] .role-admin { background: rgba(0,150,200,0.12); color: #007ea7; }
+[data-theme="light"] .role-staff { background: rgba(16,185,129,0.12); color: #059669; }
+[data-theme="light"] .role-viewer { background: rgba(139,92,246,0.12); color: #7c3aed; }
+
 .theme-toggle-btn {
     display: flex; align-items: center; gap: 10px;
     width: 100%; padding: 10px 16px;

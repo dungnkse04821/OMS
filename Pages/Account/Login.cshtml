@@ -1,0 +1,259 @@
+@page
+@model OMS.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OMS</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 2rem;
+        }
+        .auth-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .auth-brand h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 0.25rem 0;
+        }
+        .auth-brand p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .auth-form .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .auth-form label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+        .auth-form input[type="email"],
+        .auth-form input[type="password"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--input-bg, rgba(255,255,255,0.06));
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-sizing: border-box;
+        }
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
+        }
+        .auth-form .btn-auth {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: #0a0e17;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            margin-top: 0.5rem;
+        }
+        .auth-form .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.25);
+        }
+        .auth-form .btn-auth:active {
+            transform: scale(0.98);
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+        .auth-footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-footer a:hover { text-decoration: underline; }
+        .auth-error {
+            background: rgba(255, 75, 75, 0.12);
+            border: 1px solid rgba(255, 75, 75, 0.3);
+            color: #ff6b6b;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+        }
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .remember-row input[type="checkbox"] {
+            accent-color: var(--accent-primary);
+            width: 16px;
+            height: 16px;
+        }
+        .remember-row label {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+        .demo-accounts {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.15);
+            border-radius: 10px;
+        }
+        .demo-accounts h4 {
+            color: var(--accent-primary);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.75rem 0;
+        }
+        .demo-account-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.82rem;
+        }
+        .demo-account-item:last-child { border-bottom: none; }
+        .demo-account-item .role-badge {
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .role-admin { background: rgba(0,242,254,0.15); color: #00f2fe; }
+        .role-staff { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+        .role-viewer { background: rgba(162,155,254,0.15); color: #a29bfe; }
+        .demo-account-item .demo-creds {
+            color: var(--text-secondary);
+        }
+        .demo-fill-btn {
+            background: none;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .demo-fill-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <h1>📦 OMS</h1>
+                <p>Hệ thống Quản lý Đơn hàng</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="auth-error">@Model.ErrorMessage</div>
+            }
+
+            <form method="post" class="auth-form">
+                <div class="form-group">
+                    <label asp-for="Input.Email">Email</label>
+                    <input asp-for="Input.Email" type="email" placeholder="admin@oms.local" autocomplete="email" required />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.Password">Mật khẩu</label>
+                    <input asp-for="Input.Password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+                </div>
+                <div class="remember-row">
+                    <input asp-for="Input.RememberMe" type="checkbox" />
+                    <label asp-for="Input.RememberMe">Ghi nhớ đăng nhập</label>
+                </div>
+                <button type="submit" class="btn-auth">Đăng nhập</button>
+            </form>
+
+            <div class="auth-footer">
+                Chưa có tài khoản? <a href="/Account/Register">Đăng ký</a>
+            </div>
+
+            <!-- Demo accounts reference -->
+            <div class="demo-accounts">
+                <h4>Tài khoản mẫu</h4>
+                <div class="demo-account-item">
+                    <span class="role-badge role-admin">Admin</span>
+                    <span class="demo-creds">admin@oms.local</span>
+                    <button class="demo-fill-btn" onclick="fillDemo('admin@oms.local','Admin@123')">Dùng thử</button>
+                </div>
+                <div class="demo-account-item">
+                    <span class="role-badge role-staff">Staff</span>
+                    <span class="demo-creds">staff@oms.local</span>
+                    <button class="demo-fill-btn" onclick="fillDemo('staff@oms.local','Staff@123')">Dùng thử</button>
+                </div>
+                <div class="demo-account-item">
+                    <span class="role-badge role-viewer">Viewer</span>
+                    <span class="demo-creds">viewer@oms.local</span>
+                    <button class="demo-fill-btn" onclick="fillDemo('viewer@oms.local','Viewer@123')">Dùng thử</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fillDemo(email, password) {
+            document.getElementById('Input_Email').value = email;
+            document.getElementById('Input_Password').value = password;
+        }
+    </script>
+</body>
+</html>

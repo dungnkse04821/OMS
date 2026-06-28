@@ -1,0 +1,179 @@
+@page
+@model OMS.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Đăng ký";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OMS</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 2rem;
+        }
+        .auth-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .auth-brand h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 0.25rem 0;
+        }
+        .auth-brand p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .auth-form .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .auth-form label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+        .auth-form input[type="email"],
+        .auth-form input[type="password"],
+        .auth-form input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--input-bg, rgba(255,255,255,0.06));
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-sizing: border-box;
+        }
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15);
+        }
+        .auth-form .btn-auth {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: #0a0e17;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            margin-top: 0.5rem;
+        }
+        .auth-form .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.25);
+        }
+        .auth-form .btn-auth:active {
+            transform: scale(0.98);
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+        .auth-footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-footer a:hover { text-decoration: underline; }
+        .auth-error {
+            background: rgba(255, 75, 75, 0.12);
+            border: 1px solid rgba(255, 75, 75, 0.3);
+            color: #ff6b6b;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+        }
+        .auth-error ul { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <h1>📦 OMS</h1>
+                <p>Tạo tài khoản mới</p>
+            </div>
+
+            @if (Model.Errors.Any())
+            {
+                <div class="auth-error">
+                    <ul>
+                        @foreach (var err in Model.Errors)
+                        {
+                            <li>@err</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form method="post" class="auth-form">
+                <div class="form-group">
+                    <label asp-for="Input.FullName">Họ và tên</label>
+                    <input asp-for="Input.FullName" type="text" placeholder="Nguyễn Văn A" required />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.Email">Email</label>
+                    <input asp-for="Input.Email" type="email" placeholder="user@oms.local" autocomplete="email" required />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.Password">Mật khẩu</label>
+                    <input asp-for="Input.Password" type="password" placeholder="••••••••" autocomplete="new-password" required />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Input.ConfirmPassword">Xác nhận mật khẩu</label>
+                    <input asp-for="Input.ConfirmPassword" type="password" placeholder="••••••••" autocomplete="new-password" required />
+                </div>
+                <button type="submit" class="btn-auth">Đăng ký</button>
+            </form>
+
+            <div class="auth-footer">
+                Đã có tài khoản? <a href="/Account/Login">Đăng nhập</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
