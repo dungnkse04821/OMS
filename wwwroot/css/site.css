@@ -84,6 +84,16 @@ body {
                 color var(--dur-slow) var(--ease-smooth);
 }
 
+/* Chrome Autofill fix for dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--bg-input) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track  { background: var(--scrollbar-track); }
 ::-webkit-scrollbar-thumb  { background: var(--scrollbar-thumb); border-radius: 4px; }
