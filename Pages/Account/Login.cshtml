@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - OMS</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/js/oms-ui.js" asp-append-version="true"></script>
     <style>
         body {
             margin: 0;
@@ -18,7 +19,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-primary);
+            background: var(--bg-app);
             font-family: 'Inter', 'Segoe UI', sans-serif;
         }
         .auth-container {
@@ -142,56 +143,7 @@
             color: var(--text-secondary);
             font-size: 0.88rem;
         }
-        .demo-accounts {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(0, 242, 254, 0.05);
-            border: 1px solid rgba(0, 242, 254, 0.15);
-            border-radius: 10px;
-        }
-        .demo-accounts h4 {
-            color: var(--accent-primary);
-            font-size: 0.82rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0 0 0.75rem 0;
-        }
-        .demo-account-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.82rem;
-        }
-        .demo-account-item:last-child { border-bottom: none; }
-        .demo-account-item .role-badge {
-            padding: 0.15rem 0.5rem;
-            border-radius: 6px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .role-admin { background: rgba(0,242,254,0.15); color: #00f2fe; }
-        .role-staff { background: rgba(78,205,196,0.15); color: #4ecdc4; }
-        .role-viewer { background: rgba(162,155,254,0.15); color: #a29bfe; }
-        .demo-account-item .demo-creds {
-            color: var(--text-secondary);
-        }
-        .demo-fill-btn {
-            background: none;
-            border: 1px solid var(--glass-border);
-            color: var(--text-secondary);
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
-            font-size: 0.72rem;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .demo-fill-btn:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-        }
+
     </style>
 </head>
 <body>
@@ -227,33 +179,7 @@
                 Chưa có tài khoản? <a href="/Account/Register">Đăng ký</a>
             </div>
 
-            <!-- Demo accounts reference -->
-            <div class="demo-accounts">
-                <h4>Tài khoản mẫu</h4>
-                <div class="demo-account-item">
-                    <span class="role-badge role-admin">Admin</span>
-                    <span class="demo-creds">admin@oms.local</span>
-                    <button class="demo-fill-btn" onclick="fillDemo('admin@oms.local','Admin@123')">Dùng thử</button>
-                </div>
-                <div class="demo-account-item">
-                    <span class="role-badge role-staff">Staff</span>
-                    <span class="demo-creds">staff@oms.local</span>
-                    <button class="demo-fill-btn" onclick="fillDemo('staff@oms.local','Staff@123')">Dùng thử</button>
-                </div>
-                <div class="demo-account-item">
-                    <span class="role-badge role-viewer">Viewer</span>
-                    <span class="demo-creds">viewer@oms.local</span>
-                    <button class="demo-fill-btn" onclick="fillDemo('viewer@oms.local','Viewer@123')">Dùng thử</button>
-                </div>
-            </div>
         </div>
     </div>
-
-    <script>
-        function fillDemo(email, password) {
-            document.getElementById('Input_Email').value = email;
-            document.getElementById('Input_Password').value = password;
-        }
-    </script>
 </body>
 </html>
