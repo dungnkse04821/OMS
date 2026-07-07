@@ -5,7 +5,10 @@ using OMS.Endpoints;
 using OMS.Models;
 using OMS.Repositories;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddRazorPages(options =>
