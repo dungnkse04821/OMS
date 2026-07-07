@@ -33,9 +33,11 @@ namespace OMS.Pages.Orders
         public List<Customer> Customers { get; set; } = new();
         public List<Product> Products { get; set; } = new();
         public List<Carrier> Carriers { get; set; } = new();
+        public List<Warehouse> Warehouses { get; set; } = new();
+        public List<SupplySource> SupplySources { get; set; } = new();
 
         public string CustomersJson { get; set; } = "[]";
-        public string ProductsJson { get; set; } = "[]";
+        public string ProductsJson  { get; set; } = "[]";
 
         public async Task OnGetAsync()
         {
@@ -47,9 +49,11 @@ namespace OMS.Pages.Orders
 
         private async Task LoadDropdownDataAsync()
         {
-            Customers = await _customerRepository.GetAllAsync();
-            Products  = await _productRepository.GetAllAsync();
-            Carriers  = await _ctx.Carriers.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
+            Customers     = await _customerRepository.GetAllAsync();
+            Products      = await _productRepository.GetAllAsync();
+            Carriers      = await _ctx.Carriers.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
+            Warehouses    = await _ctx.Warehouses.Where(w => w.IsActive).OrderBy(w => w.SortOrder).ThenBy(w => w.Name).ToListAsync();
+            SupplySources = await _ctx.SupplySources.Where(s => s.IsActive).OrderBy(s => s.SortOrder).ThenBy(s => s.Name).ToListAsync();
 
             CustomersJson = JsonSerializer.Serialize(Customers);
             ProductsJson  = JsonSerializer.Serialize(Products);

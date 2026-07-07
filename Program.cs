@@ -36,6 +36,10 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizePage("/Carriers/Create", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Carriers/Edit", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Carriers/Delete", "StaffOrAdmin");
+
+    // ── Warehouse & SupplySource management ──────────────────────────
+    options.Conventions.AuthorizeFolder("/Warehouses", "StaffOrAdmin");
+    options.Conventions.AuthorizeFolder("/SupplySources", "StaffOrAdmin");
 });
 
 // Configure PostgreSQL DbContext

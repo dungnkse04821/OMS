@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using OMS.Data;
 using OMS.Models;
 using OMS.Repositories;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace OMS.Pages.Orders
 {
@@ -11,15 +13,18 @@ namespace OMS.Pages.Orders
         private readonly IOrderRepository _orderRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IProductRepository _productRepository;
+        private readonly ApplicationDbContext _ctx;
 
         public EditModel(
             IOrderRepository orderRepository,
             ICustomerRepository customerRepository,
-            IProductRepository productRepository)
+            IProductRepository productRepository,
+            ApplicationDbContext ctx)
         {
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
             _productRepository = productRepository;
+            _ctx = ctx;
         }
 
         [BindProperty]
@@ -28,6 +33,8 @@ namespace OMS.Pages.Orders
         // Dropdown lists
         public List<Customer> Customers { get; set; } = new();
         public List<Product> Products { get; set; } = new();
+        public List<Warehouse> Warehouses { get; set; } = new();
+        public List<SupplySource> SupplySources { get; set; } = new();
 
         // Serialized JSON for auto-completion
         public string CustomersJson { get; set; } = "[]";
@@ -53,8 +60,10 @@ namespace OMS.Pages.Orders
 
         private async Task LoadDropdownDataAsync()
         {
-            Customers = await _customerRepository.GetAllAsync();
-            Products = await _productRepository.GetAllAsync();
+            Customers     = await _customerRepository.GetAllAsync();
+            Products      = await _productRepository.GetAllAsync();
+            Warehouses    = await _ctx.Warehouses.Where(w => w.IsActive).OrderBy(w => w.SortOrder).ThenBy(w => w.Name).ToListAsync();
+            SupplySources = await _ctx.SupplySources.Where(s => s.IsActive).OrderBy(s => s.SortOrder).ThenBy(s => s.Name).ToListAsync();
 
             CustomersJson = JsonSerializer.Serialize(Customers);
             ProductsJson = JsonSerializer.Serialize(Products);

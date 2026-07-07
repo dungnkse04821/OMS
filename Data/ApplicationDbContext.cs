@@ -16,6 +16,8 @@ namespace OMS.Data
         public DbSet<OrderLog> OrderLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Carrier> Carriers { get; set; }
+        public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<SupplySource> SupplySources { get; set; }
 
         // ── Global Query Filters: automatically exclude soft-deleted records ──────
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,6 +47,23 @@ namespace OMS.Data
             modelBuilder.Entity<Customer>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Product>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Carrier>().HasQueryFilter(e => !e.IsDeleted);
+
+            // ── Seed default Warehouses ───────────────────────────────────
+            modelBuilder.Entity<Warehouse>().HasData(
+                new Warehouse { Id = 1, Name = "Kho Hà Nội",        Description = "Kho hàng tại Hà Nội",           IsActive = true, SortOrder = 1,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Warehouse { Id = 2, Name = "Kho Hồ Chí Minh",   Description = "Kho hàng tại TP. Hồ Chí Minh",  IsActive = true, SortOrder = 2,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Warehouse { Id = 3, Name = "Kho Đà Nẵng",       Description = "Kho hàng tại Đà Nẵng",         IsActive = true, SortOrder = 3,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Warehouse { Id = 4, Name = "Kho Online",         Description = "Kho hàng online / dropship",   IsActive = true, SortOrder = 10, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            // ── Seed default SupplySources ────────────────────────────────
+            modelBuilder.Entity<SupplySource>().HasData(
+                new SupplySource { Id = 1, Name = "Trung Quốc",   Description = "Hàng nhập khẩu từ Trung Quốc",    IsActive = true, SortOrder = 1,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new SupplySource { Id = 2, Name = "Hàn Quốc",     Description = "Hàng nhập khẩu từ Hàn Quốc",     IsActive = true, SortOrder = 2,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new SupplySource { Id = 3, Name = "Nhật Bản",     Description = "Hàng nhập khẩu từ Nhật Bản",     IsActive = true, SortOrder = 3,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new SupplySource { Id = 4, Name = "Việt Nam",     Description = "Hàng sản xuất trong nước",       IsActive = true, SortOrder = 4,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new SupplySource { Id = 5, Name = "Hàng xách tay", Description = "Hàng xách tay, order trực tiếp", IsActive = true, SortOrder = 5,  CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
 
             // ── Seed default system carriers ──────────────────────────────
             modelBuilder.Entity<Carrier>().HasData(

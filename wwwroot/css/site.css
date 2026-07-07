@@ -176,7 +176,52 @@ input:-webkit-autofill:active {
 }
 .sidebar-link svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-/* ── Theme toggle button (inside sidebar bottom) ── */
+/* ── Sidebar Group (Collapsible) ── */
+.sidebar-group-toggle {
+    width: 100%; background: none; border: none; cursor: pointer; text-align: left;
+}
+.sidebar-group .sidebar-submenu {
+    list-style: none; padding: 4px 0 4px 16px; margin: 0;
+    overflow: hidden; max-height: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+    opacity: 0;
+}
+.sidebar-group.open .sidebar-submenu {
+    max-height: 200px;
+    opacity: 1;
+}
+.sidebar-group.open .group-chevron {
+    transform: rotate(180deg);
+}
+.sidebar-sublink {
+    display: block;
+    padding: 8px 16px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 8px; font-size: 0.88rem; font-weight: 500;
+    transition: background var(--dur-fast), color var(--dur-fast);
+    border-left: 2px solid transparent;
+}
+.sidebar-sublink:hover {
+    background-color: rgba(255,255,255,0.04);
+    color: var(--text-primary);
+}
+[data-theme="light"] .sidebar-sublink:hover {
+    background-color: rgba(0,0,0,0.04);
+}
+.sidebar-sublink.active {
+    color: var(--primary);
+    border-left-color: var(--primary);
+    background: rgba(0,150,199,0.08);
+}
+[data-theme="dark"] .sidebar-sublink.active,
+:root:not([data-theme="light"]) .sidebar-sublink.active {
+    color: #00f2fe;
+    border-left-color: #00f2fe;
+    background: rgba(0,242,254,0.06);
+}
+
+
 .sidebar-footer {
     padding: 16px 12px;
     border-top: 1px solid var(--border-color);

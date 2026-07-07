@@ -1,0 +1,83 @@
+@page
+@model OMS.Pages.SupplySources.IndexModel
+@{
+    ViewData["Title"] = "Quản lý Nguồn hàng";
+}
+
+<div class="glass-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;margin-bottom:1.5rem;">
+        <div>
+            <h1 class="page-title">🌐 Nguồn hàng</h1>
+            <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Quản lý danh sách nguồn gốc / xuất xứ hàng hóa.</p>
+        </div>
+        <a href="/SupplySources/Create" class="btn-premium" style="padding:10px 20px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:17px;height:17px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Thêm nguồn mới
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMsg))
+    {
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.9rem;">
+            @Model.SuccessMsg
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Tên nguồn hàng</th>
+                    <th>Mô tả</th>
+                    <th style="text-align:center;">Thứ tự</th>
+                    <th style="text-align:center;">Trạng thái</th>
+                    <th style="text-align:right;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Sources)
+                {
+                    <tr>
+                        <td style="font-weight:600;">@s.Name</td>
+                        <td style="color:var(--text-muted);font-size:0.88rem;">@(s.Description ?? "—")</td>
+                        <td style="text-align:center;color:var(--text-muted);">@s.SortOrder</td>
+                        <td style="text-align:center;">
+                            @if (s.IsActive)
+                            {
+                                <span style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.25);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:600;">HOẠT ĐỘNG</span>
+                            }
+                            else
+                            {
+                                <span style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:600;">TẮT</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="action-btn-group" style="justify-content:flex-end;">
+                                <a href="/SupplySources/Edit?id=@s.Id" class="action-btn edit" title="Sửa">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                    </svg>
+                                </a>
+                                <form method="post" asp-page-handler="Delete" style="display:inline;">
+                                    <input type="hidden" name="id" value="@s.Id" />
+                                    <button type="submit" class="action-btn delete" title="Xóa"
+                                            data-confirm="Xóa nguồn hàng &quot;@s.Name&quot;? Thao tác này không thể hoàn tác.">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-1.8c0-.621-.504-1.125-1.125-1.125h-2.25c-.621 0-1.125.504-1.125 1.125v1.8M8.25 6.75h7.5" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Sources.Any())
+                {
+                    <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Chưa có nguồn hàng nào. Hãy thêm nguồn đầu tiên!</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
