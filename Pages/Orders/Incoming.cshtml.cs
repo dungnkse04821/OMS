@@ -41,10 +41,10 @@ namespace OMS.Pages.Orders
         public List<string> AllSources { get; set; } = new();
         public List<string> AllWarehouses { get; set; } = new();
 
-        // ── VietQR config ────────────────────────────────────────────────
-        public string VietQRBankId      => _config["VietQR:BankId"]      ?? "MB";
-        public string VietQRAccountNo   => _config["VietQR:AccountNo"]   ?? "";
-        public string VietQRAccountName => _config["VietQR:AccountName"] ?? "";
+        // ──  config ────────────────────────────────────────────────
+        public string BankId      => _config["BankConfig:BankId"]      ?? "MB";
+        public string AccountNo   => _config["BankConfig:AccountNo"]   ?? "";
+        public string AccountName => _config["BankConfig:AccountName"] ?? "";
 
         // ── Success / error message ──────────────────────────────────────
         public string? SuccessMsg { get; set; }

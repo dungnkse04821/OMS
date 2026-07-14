@@ -423,7 +423,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
 <div class="qr-modal-overlay hidden" id="qr-modal-overlay" onclick="closeQRModal(event)">
     <div class="qr-modal" onclick="event.stopPropagation()">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h2>📱 QR Thanh toán VietQR</h2>
+            <h2>📱 QR Thanh toán </h2>
             <button onclick="closeQRModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;">✕</button>
         </div>
 
@@ -467,9 +467,9 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
 @section Scripts {
 <script>
 // ── State ─────────────────────────────────────────────────────────────────
-const VIETQR_BANK  = '@Model.VietQRBankId';
-const VIETQR_ACNO  = '@Model.VietQRAccountNo';
-const VIETQR_ACNAME = encodeURIComponent('@Model.VietQRAccountName');
+const _BANK  = '@Model.BankId';
+const _ACNO  = '@Model.AccountNo';
+const _ACNAME = encodeURIComponent('@Model.AccountName');
 
 let selectedRows    = new Set();
 let currentMode     = null; // 'arrived' | 'delivered' | null
@@ -647,7 +647,7 @@ function applyBulkAction(action) {
     form.submit();
 }
 
-// ── QR VietQR Modal ───────────────────────────────────────────────────────
+// ── QR  Modal ───────────────────────────────────────────────────────
 function showQRModal() {
     if (selectedRows.size === 0) return;
 
@@ -682,9 +682,9 @@ function showQRModal() {
     const addInfo  = encodeURIComponent(`TT ${firstCustomer} ${orderIds}`.substring(0, 50));
     document.getElementById('qr-addinfo-display').textContent = `Nội dung CK: TT ${firstCustomer} ${orderList.map(o=>o.id).join(' ')}`;
 
-    // Build VietQR image URL
-    const qrUrl = `https://img.vietqr.io/image/${VIETQR_BANK}-${VIETQR_ACNO}-compact2.png` +
-        `?amount=${Math.round(total)}&addInfo=${addInfo}&accountName=${VIETQR_ACNAME}`;
+    // Build  image URL
+    const qrUrl = `https://img.vietqr.io/image/${_BANK}-${_ACNO}-compact2.png` +
+        `?amount=${Math.round(total)}&addInfo=${addInfo}&accountName=${_ACNAME}`;
     document.getElementById('qr-img').src = qrUrl;
 
     document.getElementById('qr-modal-overlay').classList.remove('hidden');
