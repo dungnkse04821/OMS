@@ -92,27 +92,41 @@
         </div>
 
         <div class="grid-3">
+            {{/* Nguồn hàng + nút Thêm nhanh */}}
             <div class="form-group">
                 <label asp-for="Order.Source" class="form-label"></label>
-                <select asp-for="Order.Source" id="order-source" class="form-input">
-                    <option value="">-- Chọn nguồn hàng --</option>
-                    @foreach (var s in Model.SupplySources)
-                    {
-                        <option value="@s.Name">@s.Name</option>
-                    }
-                </select>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <select asp-for="Order.Source" id="order-source" class="form-input" style="flex:1;">
+                        <option value="">-- Chọn nguồn hàng --</option>
+                        @foreach (var s in Model.SupplySources)
+                        {
+                            <option value="@s.Name">@s.Name</option>
+                        }
+                    </select>
+                    <button type="button" class="quick-add-btn" title="Thêm nguồn hàng mới"
+                            onclick="quickAddDropdown('source', 'order-source', 'Tên nguồn hàng mới...')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    </button>
+                </div>
                 <span asp-validation-for="Order.Source" class="text-danger"></span>
             </div>
 
+            {{/* Kho hàng + nút Thêm nhanh */}}
             <div class="form-group">
                 <label asp-for="Order.Warehouse" class="form-label"></label>
-                <select asp-for="Order.Warehouse" id="order-warehouse" class="form-input">
-                    <option value="">-- Chọn kho hàng --</option>
-                    @foreach (var w in Model.Warehouses)
-                    {
-                        <option value="@w.Name">@w.Name</option>
-                    }
-                </select>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <select asp-for="Order.Warehouse" id="order-warehouse" class="form-input" style="flex:1;">
+                        <option value="">-- Chọn kho hàng --</option>
+                        @foreach (var w in Model.Warehouses)
+                        {
+                            <option value="@w.Name">@w.Name</option>
+                        }
+                    </select>
+                    <button type="button" class="quick-add-btn" title="Thêm kho hàng mới"
+                            onclick="quickAddDropdown('warehouse', 'order-warehouse', 'Tên kho hàng mới...')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    </button>
+                </div>
                 <span asp-validation-for="Order.Warehouse" class="text-danger"></span>
             </div>
 
@@ -128,6 +142,10 @@
             </div>
         </div>
 
+        {{/* Auto-create hint */}}
+        <div style="background:rgba(0,242,254,0.04);border:1px solid rgba(0,242,254,0.12);border-radius:10px;padding:10px 14px;font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">
+            💡 <strong>Tự động:</strong> Nếu Khách hàng (theo SĐT) hoặc Sản phẩm (theo Mã SKU) chưa có trong hệ thống, chúng sẽ được tạo tự động khi lưu đơn.
+        </div>
 
         <!-- 3. Giá & Dòng tiền -->
         <h3 style="color: #00f2fe; margin: 30px 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">
@@ -532,5 +550,99 @@
 
         // Run calculation once on page load
         calculateOrderFinance();
+
+        // ── Quick-Add Dropdown via AJAX ─────────────────────────────────────
+        async function quickAddDropdown(type, selectId, placeholder) {
+            // Create floating mini-modal
+            const existing = document.getElementById('quick-add-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'quick-add-modal';
+            modal.style.cssText = `
+                position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+                background:var(--bg-card); border:1px solid rgba(0,242,254,0.25);
+                border-radius:14px; padding:20px 24px; z-index:999; width:300px;
+                box-shadow:0 16px 40px rgba(0,0,0,0.4);
+                animation: modalIn 0.2s ease;
+            `;
+
+            const label = type === 'warehouse' ? 'Kho hàng' : 'Nguồn hàng';
+            const handler = type === 'warehouse' ? 'QuickAddWarehouse' : 'QuickAddSource';
+
+            modal.innerHTML = `
+                <h4 style="margin:0 0 12px;color:#00f2fe;font-size:0.95rem;">➕ Thêm ${label} mới</h4>
+                <input id="qa-input" type="text" placeholder="${placeholder}"
+                    style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border-color);
+                           background:var(--bg-primary);color:var(--text-primary);font-size:0.9rem;margin-bottom:10px;box-sizing:border-box;" />
+                <div id="qa-error" style="color:#ef4444;font-size:0.78rem;margin-bottom:8px;display:none;"></div>
+                <div style="display:flex;gap:8px;">
+                    <button id="qa-confirm" style="flex:1;padding:9px;border:none;border-radius:8px;
+                        background:linear-gradient(135deg,#00b4d8,#00f2fe);color:#0d111e;font-weight:700;cursor:pointer;">
+                        Lưu
+                    </button>
+                    <button onclick="document.getElementById('quick-add-modal').remove()"
+                        style="flex:0 0 auto;padding:9px 14px;border:1px solid var(--border-color);
+                               border-radius:8px;background:none;color:var(--text-muted);cursor:pointer;">
+                        Hủy
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const input   = document.getElementById('qa-input');
+            const errDiv  = document.getElementById('qa-error');
+            const confirm = document.getElementById('qa-confirm');
+            input.focus();
+
+            async function doSave() {
+                const name = input.value.trim();
+                if (!name) { errDiv.textContent = 'Vui lòng nhập tên.'; errDiv.style.display='block'; return; }
+
+                confirm.disabled = true;
+                confirm.textContent = '...';
+                errDiv.style.display = 'none';
+
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    const res = await fetch(`/Orders/Create?handler=${handler}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token || ''
+                        },
+                        body: JSON.stringify({ name })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        errDiv.textContent = data.error || 'Có lỗi xảy ra.';
+                        errDiv.style.display = 'block';
+                        confirm.disabled = false;
+                        confirm.textContent = 'Lưu';
+                        return;
+                    }
+
+                    // Add to dropdown and select it
+                    const select = document.getElementById(selectId);
+                    const opt = document.createElement('option');
+                    opt.value = data.name;
+                    opt.textContent = data.name;
+                    opt.selected = true;
+                    select.appendChild(opt);
+
+                    modal.remove();
+                } catch(e) {
+                    errDiv.textContent = 'Lỗi kết nối.';
+                    errDiv.style.display = 'block';
+                    confirm.disabled = false;
+                    confirm.textContent = 'Lưu';
+                }
+            }
+
+            confirm.addEventListener('click', doSave);
+            input.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') modal.remove(); });
+        }
     </script>
 }

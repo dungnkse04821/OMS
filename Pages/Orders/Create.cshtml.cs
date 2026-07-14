@@ -39,6 +39,42 @@ namespace OMS.Pages.Orders
         public string CustomersJson { get; set; } = "[]";
         public string ProductsJson  { get; set; } = "[]";
 
+        // ── AJAX: Quick-add a new Warehouse ───────────────────────────────
+        public async Task<IActionResult> OnPostQuickAddWarehouseAsync([FromBody] QuickAddRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req?.Name))
+                return BadRequest(new { error = "Tên kho không được để trống." });
+
+            var name = req.Name.Trim();
+            var exists = await _ctx.Warehouses.AnyAsync(w => w.Name == name);
+            if (exists)
+                return StatusCode(409, new { error = $"Kho \"{name}\" đã tồn tại." });
+
+            var wh = new Warehouse { Name = name, IsActive = true, SortOrder = 99, CreatedAt = DateTime.UtcNow };
+            _ctx.Warehouses.Add(wh);
+            await _ctx.SaveChangesAsync();
+            return new JsonResult(new { name = wh.Name, id = wh.Id });
+        }
+
+        // ── AJAX: Quick-add a new SupplySource ────────────────────────────
+        public async Task<IActionResult> OnPostQuickAddSourceAsync([FromBody] QuickAddRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req?.Name))
+                return BadRequest(new { error = "Tên nguồn hàng không được để trống." });
+
+            var name = req.Name.Trim();
+            var exists = await _ctx.SupplySources.AnyAsync(s => s.Name == name);
+            if (exists)
+                return StatusCode(409, new { error = $"Nguồn \"{name}\" đã tồn tại." });
+
+            var src = new SupplySource { Name = name, IsActive = true, SortOrder = 99, CreatedAt = DateTime.UtcNow };
+            _ctx.SupplySources.Add(src);
+            await _ctx.SaveChangesAsync();
+            return new JsonResult(new { name = src.Name, id = src.Id });
+        }
+
+        public record QuickAddRequest(string Name);
+
         public async Task OnGetAsync()
         {
             Order.OrderDate = DateTime.Today;
@@ -86,6 +122,55 @@ namespace OMS.Pages.Orders
             {
                 await LoadDropdownDataAsync();
                 return Page();
+            }
+
+            // ── Auto-create Customer if phone not found ────────────────────
+            if (!string.IsNullOrWhiteSpace(Order.PhoneNumber))
+            {
+                var allCustomers = await _customerRepository.GetAllAsync();
+                var existingCustomer = allCustomers.FirstOrDefault(c =>
+                    c.PhoneNumber == Order.PhoneNumber.Trim());
+
+                if (existingCustomer == null)
+                {
+                    // Generate customer ID
+                    int nextCustNo = allCustomers.Count + 1;
+                    string custId  = $"KH{nextCustNo:D4}";
+                    while (allCustomers.Any(c => c.Id == custId))
+                    {
+                        nextCustNo++;
+                        custId = $"KH{nextCustNo:D4}";
+                    }
+
+                    await _customerRepository.AddAsync(new Customer
+                    {
+                        Id          = custId,
+                        FullName    = Order.CustomerName ?? Order.PhoneNumber,
+                        PhoneNumber = Order.PhoneNumber.Trim(),
+                        Address     = Order.ShippingAddress ?? "",
+                        CreatedAt   = DateTime.UtcNow,
+                    });
+                }
+            }
+
+            // ── Auto-create Product if SKU not found ───────────────────────
+            if (!string.IsNullOrWhiteSpace(Order.Code))
+            {
+                var existingProduct = await _productRepository.GetByIdAsync(Order.Code.Trim());
+                if (existingProduct == null)
+                {
+                    await _productRepository.AddAsync(new Product
+                    {
+                        Sku          = Order.Code.Trim(),
+                        Name         = Order.ProductName ?? Order.Code,
+                        Category     = Order.Category ?? "",
+                        ImportPrice  = Order.ImportPrice,
+                        SellingPrice = Order.SellingPrice,
+                        Source       = Order.Source ?? "",
+                        Warehouse    = Order.Warehouse ?? "",
+                        CreatedAt    = DateTime.UtcNow,
+                    });
+                }
             }
 
             await _orderRepository.AddAsync(Order);
