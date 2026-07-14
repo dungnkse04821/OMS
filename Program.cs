@@ -27,6 +27,7 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizePage("/Orders/Edit", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Orders/Delete", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Orders/ImportTracking", "StaffOrAdmin");
+    options.Conventions.AuthorizePage("/Orders/Incoming", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Customers/Create", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Customers/Edit", "StaffOrAdmin");
     options.Conventions.AuthorizePage("/Customers/Delete", "StaffOrAdmin");

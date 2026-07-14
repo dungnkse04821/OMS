@@ -1,0 +1,715 @@
+@page
+@model OMS.Pages.Orders.IncomingModel
+@{
+    ViewData["Title"] = "Xử lý hàng loạt";
+}
+
+<style>
+/* ── Incoming Page Styles ─────────────────────────────────────── */
+.incoming-action-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(13, 17, 30, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 24px rgba(0, 242, 254, 0.08);
+}
+[data-theme="light"] .incoming-action-bar {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 120, 160, 0.2);
+}
+.incoming-action-bar.hidden { display: none; }
+
+.action-btn-group-inline { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-arriving  { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; }
+.btn-arrived   { background: linear-gradient(135deg, #00b4d8, #00f2fe); color: #0d111e; border: none; }
+.btn-delivered { background: linear-gradient(135deg, #10b981, #34d399); color: #0d111e; border: none; }
+.btn-qr        { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #0d111e; border: none; }
+
+.btn-arriving, .btn-arrived, .btn-delivered, .btn-qr {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.15s, opacity 0.15s;
+}
+.btn-arriving:hover, .btn-arrived:hover, .btn-delivered:hover, .btn-qr:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+.btn-arriving:disabled, .btn-arrived:disabled, .btn-delivered:disabled, .btn-qr:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Extra input columns on rows ── */
+.row-extra-input {
+    display: none;
+    padding: 6px 8px;
+    gap: 6px;
+    flex-direction: column;
+}
+.row-extra-input.show { display: flex; }
+.row-extra-input input {
+    width: 100%;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+}
+
+/* ── Selected row highlight ── */
+tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
+
+/* ── QR Modal ── */
+.qr-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.qr-modal-overlay.hidden { display: none; }
+
+.qr-modal {
+    background: var(--bg-card);
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    border-radius: 20px;
+    padding: 28px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    animation: modalIn 0.25s ease;
+}
+@@keyframes modalIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+.qr-modal h2 {
+    font-size: 1.1rem; font-weight: 700; margin: 0 0 4px 0;
+    background: linear-gradient(135deg, #00b4d8, #00f2fe);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.qr-image-wrap {
+    text-align: center;
+    margin: 16px 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.qr-image-wrap img {
+    max-width: 220px;
+    border-radius: 8px;
+}
+
+.qr-detail-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 16px; }
+.qr-detail-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-color); }
+.qr-detail-table td:first-child { color: var(--text-muted); white-space: nowrap; }
+.qr-detail-table td:last-child { font-weight: 600; text-align: right; }
+.qr-total-row td { font-size: 1rem; color: #00f2fe; }
+
+.total-collect-display {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #10b981;
+    letter-spacing: -0.5px;
+    margin: 8px 0;
+}
+</style>
+
+<div class="glass-card">
+    {{/* Header */}}
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;">
+        <div>
+            <h1 class="page-title">⚡ Xử lý hàng loạt</h1>
+            <p style="color:var(--text-muted);margin:0;font-size:0.9rem;">Chọn nhiều đơn hàng và cập nhật trạng thái, giá nhập, tiền thu cùng lúc.</p>
+        </div>
+        <a href="/Orders" class="btn-secondary-premium" style="padding:9px 16px;font-size:0.875rem;">
+            ← Về danh sách đơn
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMsg))
+    {
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:0.9rem;">
+            @Model.SuccessMsg
+        </div>
+    }
+
+    {{/* Filter bar */}}
+    <form method="get" style="margin-bottom:20px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:2;min-width:200px;">
+                <label class="form-label" style="font-size:0.75rem;">Tìm kiếm</label>
+                <input type="text" asp-for="SearchQuery" class="form-input" placeholder="Tên KH, SĐT, Mã đơn..." />
+            </div>
+            <div style="flex:1;min-width:130px;">
+                <label class="form-label" style="font-size:0.75rem;">Từ ngày</label>
+                <input type="date" asp-for="FromDate" class="form-input" />
+            </div>
+            <div style="flex:1;min-width:130px;">
+                <label class="form-label" style="font-size:0.75rem;">Đến ngày</label>
+                <input type="date" asp-for="ToDate" class="form-input" />
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <label class="form-label" style="font-size:0.75rem;">Nguồn hàng</label>
+                <select asp-for="SourceFilter" class="form-input">
+                    <option value="">Tất cả</option>
+                    @foreach (var s in Model.AllSources.Where(x => !string.IsNullOrEmpty(x)))
+                    {
+                        <option value="@s">@s</option>
+                    }
+                </select>
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <label class="form-label" style="font-size:0.75rem;">Kho hàng</label>
+                <select asp-for="WarehouseFilter" class="form-input">
+                    <option value="">Tất cả</option>
+                    @foreach (var w in Model.AllWarehouses.Where(x => !string.IsNullOrEmpty(x)))
+                    {
+                        <option value="@w">@w</option>
+                    }
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+                <button type="submit" class="btn-primary-premium" style="padding:11px 18px;">Lọc</button>
+                <a href="/Orders/Incoming" class="btn-secondary-premium" style="padding:11px 16px;">Xóa</a>
+            </div>
+        </div>
+
+        {{/* Status filter checkboxes */}}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center;">
+            <span style="color:var(--text-muted);font-size:0.8rem;">Trạng thái:</span>
+            @foreach (var st in OMS.Models.OrderStatusList.All)
+            {
+                var isChecked = Model.StatusFilters.Contains(st);
+                var color = st switch {
+                    "Chờ đặt" => "var(--warning)",
+                    "Đã đặt"  => "var(--purple)",
+                    "Đang về" => "var(--info)",
+                    "Đã về"   => "#00f2fe",
+                    "Đã giao" => "var(--success)",
+                    "Hủy"     => "var(--danger)",
+                    _ => "var(--text-muted)"
+                };
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.83rem;">
+                    <input type="checkbox" name="StatusFilters" value="@st" @(isChecked ? "checked" : "")
+                           style="accent-color:@color;" />
+                    <span style="color:@color;font-weight:600;">@st</span>
+                    <span style="color:var(--text-muted);font-size:0.75rem;">
+                        (@Model.Orders.Count(o => o.Status == st))
+                    </span>
+                </label>
+            }
+        </div>
+    </form>
+
+    {{/* ── Bulk Action Bar (sticky, shown when rows selected) ── */}}
+    <div class="incoming-action-bar hidden" id="action-bar">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;">
+            <div style="display:flex;align-items:center;gap:8px;margin-right:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#00f2fe" style="width:18px;height:18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="selected-count-label" style="color:#00f2fe;font-weight:700;font-size:0.95rem;">0 đơn</span>
+                <span style="color:var(--text-muted);font-size:0.82rem;">|</span>
+                <span style="color:var(--text-muted);font-size:0.82rem;">Còn thu:</span>
+                <span id="total-remaining-label" style="color:#10b981;font-weight:700;font-size:0.95rem;">0 ₫</span>
+            </div>
+
+            <div class="action-btn-group-inline" style="flex:1;">
+                <button type="button" class="btn-arriving" id="btn-set-arriving" disabled
+                        onclick="applyBulkAction('set-arriving')">
+                    🚚 Đánh dấu Đang về
+                </button>
+                <button type="button" class="btn-arrived" id="btn-set-arrived" disabled
+                        onclick="toggleExtraInputs('arrived')">
+                    📦 Nhập → Đã về
+                </button>
+                <button type="button" class="btn-delivered" id="btn-set-delivered" disabled
+                        onclick="toggleExtraInputs('delivered')">
+                    ✅ Thu tiền → Đã giao
+                </button>
+                <button type="button" class="btn-qr" id="btn-show-qr" disabled
+                        onclick="showQRModal()">
+                    📱 QR Thanh toán
+                </button>
+            </div>
+
+            <button type="button" onclick="clearSelection()"
+                    style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;padding:4px 8px;">
+                ✕ Bỏ chọn tất cả
+            </button>
+        </div>
+
+        {{/* Extra inputs panel for "Đã về" mode */}}
+        <div id="panel-arrived" style="display:none;width:100%;padding-top:12px;border-top:1px solid var(--border-color);margin-top:10px;">
+            <p style="color:var(--text-muted);font-size:0.82rem;margin:0 0 8px 0;">
+                💡 Nhập <strong>Ngày về</strong> và <strong>Giá nhập</strong> cho từng đơn đã chọn bên dưới, sau đó bấm Xác nhận.
+            </p>
+            <button type="button" class="btn-arrived" onclick="applyBulkAction('set-arrived')">
+                📦 Xác nhận → Đã về
+            </button>
+        </div>
+
+        {{/* Extra inputs panel for "Đã giao" mode */}}
+        <div id="panel-delivered" style="display:none;width:100%;padding-top:12px;border-top:1px solid var(--border-color);margin-top:10px;">
+            <p style="color:var(--text-muted);font-size:0.82rem;margin:0 0 8px 0;">
+                💡 Nhập <strong>Số tiền thu</strong> cho từng đơn đã chọn bên dưới, sau đó bấm Xác nhận.
+            </p>
+            <button type="button" class="btn-delivered" onclick="applyBulkAction('set-delivered')">
+                ✅ Xác nhận → Đã giao
+            </button>
+        </div>
+    </div>
+
+    {{/* ── Hidden bulk form (submitted by JS) ── */}}
+    <form id="bulk-form" method="post" asp-page-handler="BulkAction" style="display:none;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="bulkAction" id="bulk-action-input" />
+        <div id="bulk-ids-container"></div>
+        <div id="bulk-extra-container"></div>
+    </form>
+
+    {{/* ── Table ── */}}
+    @if (!Model.Orders.Any())
+    {
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">
+            <div style="font-size:2.5rem;margin-bottom:12px;">📋</div>
+            <p>Không tìm thấy đơn hàng nào.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="custom-table" style="font-size:0.86rem;" id="incoming-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">
+                            <label class="bulk-checkbox-wrapper" title="Chọn tất cả">
+                                <input type="checkbox" id="check-all" onchange="toggleAll(this)" />
+                                <span class="bulk-checkmark"></span>
+                            </label>
+                        </th>
+                        <th>Mã ĐH</th>
+                        <th>Ngày đặt</th>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm</th>
+                        <th style="text-align:right;">SL</th>
+                        <th style="text-align:right;">Tổng tiền</th>
+                        <th style="text-align:right;">Còn lại</th>
+                        <th>Nguồn / Kho</th>
+                        <th>Trạng thái</th>
+                        {{/* Extra input columns (hidden by default) */}}
+                        <th class="col-extra col-arrived" style="display:none;min-width:140px;">Ngày về</th>
+                        <th class="col-extra col-arrived" style="display:none;min-width:140px;">Giá nhập</th>
+                        <th class="col-extra col-delivered" style="display:none;min-width:140px;">Tiền thu thêm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        string badge = order.Status switch {
+                            "Chờ đặt" => "pending",
+                            "Đã đặt"  => "ordered",
+                            "Đang về" => "shipping",
+                            "Đã về"   => "arrived",
+                            "Đã giao" => "delivered",
+                            "Hủy"     => "cancelled",
+                            _ => "pending"
+                        };
+                        <tr class="bulk-row" id="row-@order.Id"
+                            data-id="@order.Id"
+                            data-remaining="@order.RemainingAmount"
+                            data-customer="@order.CustomerName"
+                            data-total="@order.TotalAmount"
+                            data-import="@order.ImportPrice">
+                            <td>
+                                <label class="bulk-checkbox-wrapper">
+                                    <input type="checkbox" class="row-check" value="@order.Id"
+                                           onchange="onRowCheck(this)" />
+                                    <span class="bulk-checkmark"></span>
+                                </label>
+                            </td>
+                            <td style="font-family:monospace;color:#00f2fe;font-weight:600;">
+                                <a href="/Orders/Edit?id=@order.Id" style="color:inherit;">@order.Id</a>
+                            </td>
+                            <td>@(order.OrderDate?.ToString("dd/MM/yy") ?? "-")</td>
+                            <td>
+                                <div style="font-weight:600;">@order.CustomerName</div>
+                                <div style="font-size:0.78rem;color:var(--text-muted);">@order.PhoneNumber</div>
+                            </td>
+                            <td>
+                                <div>@order.ProductName</div>
+                                @if (!string.IsNullOrEmpty(order.Code))
+                                {
+                                    <div style="font-size:0.75rem;color:var(--text-muted);">@order.Code</div>
+                                }
+                            </td>
+                            <td style="text-align:right;font-weight:600;">@order.Quantity</td>
+                            <td style="text-align:right;">@order.TotalAmount.ToString("N0") ₫</td>
+                            <td style="text-align:right;color:#10b981;font-weight:600;">
+                                @if (order.RemainingAmount > 0)
+                                { <span>@order.RemainingAmount.ToString("N0") ₫</span> }
+                                else
+                                { <span style="color:var(--text-muted);">Đã TT</span> }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(order.Source))
+                                { <div style="font-size:0.78rem;">🌐 @order.Source</div> }
+                                @if (!string.IsNullOrEmpty(order.Warehouse))
+                                { <div style="font-size:0.78rem;">🏭 @order.Warehouse</div> }
+                            </td>
+                            <td><span class="status-badge @badge">@order.Status</span></td>
+
+                            {{/* Extra: Arrived inputs */}}
+                            <td class="col-extra col-arrived" style="display:none;">
+                                <div class="row-extra-input">
+                                    <input type="date" class="extra-arrival-date" value="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                           placeholder="Ngày về" />
+                                </div>
+                            </td>
+                            <td class="col-extra col-arrived" style="display:none;">
+                                <div class="row-extra-input">
+                                    <input type="number" class="extra-import-price" value="@order.ImportPrice"
+                                           placeholder="Giá nhập" min="0" step="1000" />
+                                </div>
+                            </td>
+
+                            {{/* Extra: Delivered inputs */}}
+                            <td class="col-extra col-delivered" style="display:none;">
+                                <div class="row-extra-input">
+                                    <input type="number" class="extra-collected" value="@order.RemainingAmount"
+                                           placeholder="Tiền thu thêm" min="0" step="1000" />
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top:12px;color:var(--text-muted);font-size:0.82rem;">
+            Hiển thị @Model.Orders.Count đơn hàng.
+        </div>
+    }
+</div>
+
+{{/* ── QR Modal ── */}}
+<div class="qr-modal-overlay hidden" id="qr-modal-overlay" onclick="closeQRModal(event)">
+    <div class="qr-modal" onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2>📱 QR Thanh toán VietQR</h2>
+            <button onclick="closeQRModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;">✕</button>
+        </div>
+
+        <div class="qr-image-wrap" id="qr-image-wrap">
+            <img id="qr-img" src="" alt="QR Code" />
+        </div>
+
+        <div class="total-collect-display" id="qr-total-display">0 ₫</div>
+        <p style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin:0 0 16px 0;" id="qr-addinfo-display"></p>
+
+        <table class="qr-detail-table" id="qr-orders-table">
+            <thead>
+                <tr style="color:var(--text-muted);font-size:0.78rem;">
+                    <td>Đơn hàng</td>
+                    <td>Khách hàng</td>
+                    <td>Còn lại</td>
+                </tr>
+            </thead>
+            <tbody id="qr-orders-body"></tbody>
+            <tfoot>
+                <tr class="qr-total-row">
+                    <td colspan="2">Tổng cần thu</td>
+                    <td id="qr-total-cell">0 ₫</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div style="display:flex;gap:10px;margin-top:16px;">
+            <button class="btn-delivered" style="flex:1;justify-content:center;padding:12px;"
+                    onclick="confirmAndDeliver()">
+                ✅ Đã nhận tiền → Đánh dấu Đã giao
+            </button>
+            <button onclick="closeQRModal()"
+                    style="flex:0 0 auto;padding:12px 16px;background:none;border:1px solid var(--border-color);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:0.875rem;">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+const VIETQR_BANK  = '@Model.VietQRBankId';
+const VIETQR_ACNO  = '@Model.VietQRAccountNo';
+const VIETQR_ACNAME = encodeURIComponent('@Model.VietQRAccountName');
+
+let selectedRows    = new Set();
+let currentMode     = null; // 'arrived' | 'delivered' | null
+
+// ── Row Selection ─────────────────────────────────────────────────────────
+function onRowCheck(checkbox) {
+    const row = checkbox.closest('tr.bulk-row');
+    const id  = row.dataset.id;
+    if (checkbox.checked) {
+        selectedRows.add(id);
+        row.classList.add('selected');
+    } else {
+        selectedRows.delete(id);
+        row.classList.remove('selected');
+    }
+    updateActionBar();
+    // Show extra inputs for selected rows only
+    updateExtraInputVisibility(row);
+}
+
+function toggleAll(masterCheckbox) {
+    document.querySelectorAll('.row-check').forEach(cb => {
+        cb.checked = masterCheckbox.checked;
+        const row = cb.closest('tr.bulk-row');
+        if (masterCheckbox.checked) {
+            selectedRows.add(row.dataset.id);
+            row.classList.add('selected');
+        } else {
+            selectedRows.delete(row.dataset.id);
+            row.classList.remove('selected');
+        }
+        updateExtraInputVisibility(row);
+    });
+    updateActionBar();
+}
+
+function clearSelection() {
+    selectedRows.clear();
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.bulk-row').forEach(r => r.classList.remove('selected'));
+    document.getElementById('check-all').checked = false;
+    currentMode = null;
+    hideAllExtraColumns();
+    updateActionBar();
+}
+
+// ── Action Bar ────────────────────────────────────────────────────────────
+function updateActionBar() {
+    const count = selectedRows.size;
+    const bar   = document.getElementById('action-bar');
+    const hasSelection = count > 0;
+
+    bar.classList.toggle('hidden', !hasSelection);
+
+    // Count label
+    document.getElementById('selected-count-label').textContent = count + ' đơn';
+
+    // Total remaining
+    let totalRemaining = 0;
+    selectedRows.forEach(id => {
+        const row = document.querySelector(`tr.bulk-row[data-id="${id}"]`);
+        if (row) totalRemaining += parseFloat(row.dataset.remaining || 0);
+    });
+    document.getElementById('total-remaining-label').textContent =
+        totalRemaining.toLocaleString('vi-VN') + ' ₫';
+
+    // Enable/disable action buttons
+    ['btn-set-arriving','btn-set-arrived','btn-set-delivered','btn-show-qr'].forEach(id => {
+        document.getElementById(id).disabled = !hasSelection;
+    });
+}
+
+// ── Extra Input Columns ───────────────────────────────────────────────────
+function toggleExtraInputs(mode) {
+    if (currentMode === mode) {
+        // Toggle off
+        currentMode = null;
+        hideAllExtraColumns();
+        document.getElementById('panel-arrived').style.display  = 'none';
+        document.getElementById('panel-delivered').style.display = 'none';
+    } else {
+        currentMode = mode;
+        hideAllExtraColumns();
+        document.querySelectorAll('.col-extra.col-' + mode).forEach(el => el.style.display = '');
+        document.querySelectorAll('.row-extra-input').forEach(el => el.classList.remove('show'));
+
+        // Show extra inputs only for selected rows
+        selectedRows.forEach(id => {
+            const row = document.querySelector(`tr.bulk-row[data-id="${id}"]`);
+            if (row) {
+                row.querySelectorAll('.col-extra.col-' + mode + ' .row-extra-input').forEach(el => el.classList.add('show'));
+            }
+        });
+
+        document.getElementById('panel-arrived').style.display  = (mode === 'arrived')   ? 'block' : 'none';
+        document.getElementById('panel-delivered').style.display = (mode === 'delivered') ? 'block' : 'none';
+    }
+}
+
+function hideAllExtraColumns() {
+    document.querySelectorAll('.col-extra').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.row-extra-input').forEach(el => el.classList.remove('show'));
+}
+
+function updateExtraInputVisibility(row) {
+    if (!currentMode) return;
+    const isSelected = row.classList.contains('selected');
+    row.querySelectorAll('.col-extra.col-' + currentMode + ' .row-extra-input').forEach(el => {
+        el.classList.toggle('show', isSelected);
+    });
+}
+
+// ── Submit Bulk Form ──────────────────────────────────────────────────────
+function applyBulkAction(action) {
+    if (selectedRows.size === 0) return;
+
+    const form         = document.getElementById('bulk-form');
+    const idsContainer = document.getElementById('bulk-ids-container');
+    const extraContainer = document.getElementById('bulk-extra-container');
+
+    document.getElementById('bulk-action-input').value = action;
+
+    // Clear previous hidden inputs
+    idsContainer.innerHTML   = '';
+    extraContainer.innerHTML = '';
+
+    // Add selected IDs
+    selectedRows.forEach(id => {
+        const inp = document.createElement('input');
+        inp.type  = 'hidden';
+        inp.name  = 'selectedIds';
+        inp.value = id;
+        idsContainer.appendChild(inp);
+    });
+
+    // Add per-row extra data
+    if (action === 'set-arrived') {
+        selectedRows.forEach(id => {
+            const row = document.querySelector(`tr.bulk-row[data-id="${id}"]`);
+            if (!row) return;
+
+            const dateInput  = row.querySelector('.extra-arrival-date');
+            const priceInput = row.querySelector('.extra-import-price');
+
+            if (dateInput) {
+                const d = document.createElement('input');
+                d.type = 'hidden';
+                d.name = `arrivalDates[${id}]`;
+                d.value = dateInput.value;
+                extraContainer.appendChild(d);
+            }
+            if (priceInput) {
+                const p = document.createElement('input');
+                p.type = 'hidden';
+                p.name = `importPrices[${id}]`;
+                p.value = priceInput.value;
+                extraContainer.appendChild(p);
+            }
+        });
+    } else if (action === 'set-delivered') {
+        selectedRows.forEach(id => {
+            const row = document.querySelector(`tr.bulk-row[data-id="${id}"]`);
+            if (!row) return;
+            const collectInput = row.querySelector('.extra-collected');
+            if (collectInput) {
+                const c = document.createElement('input');
+                c.type  = 'hidden';
+                c.name  = `collectedAmounts[${id}]`;
+                c.value = collectInput.value;
+                extraContainer.appendChild(c);
+            }
+        });
+    }
+
+    form.submit();
+}
+
+// ── QR VietQR Modal ───────────────────────────────────────────────────────
+function showQRModal() {
+    if (selectedRows.size === 0) return;
+
+    let total = 0;
+    const tbody = document.getElementById('qr-orders-body');
+    tbody.innerHTML = '';
+    const orderList = [];
+
+    selectedRows.forEach(id => {
+        const row = document.querySelector(`tr.bulk-row[data-id="${id}"]`);
+        if (!row) return;
+        const remaining = parseFloat(row.dataset.remaining || 0);
+        const customer  = row.dataset.customer || id;
+        total += remaining;
+        orderList.push({ id, customer, remaining });
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-family:monospace;color:#00f2fe;">${id}</td>
+            <td>${customer}</td>
+            <td style="text-align:right;font-weight:600;">${remaining.toLocaleString('vi-VN')} ₫</td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Total display
+    document.getElementById('qr-total-cell').textContent    = total.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('qr-total-display').textContent  = total.toLocaleString('vi-VN') + ' ₫';
+
+    // AddInfo = first customer + order IDs
+    const firstCustomer = orderList[0]?.customer?.toUpperCase() || 'KHACH';
+    const orderIds = orderList.map(o => o.id).join(' ');
+    const addInfo  = encodeURIComponent(`TT ${firstCustomer} ${orderIds}`.substring(0, 50));
+    document.getElementById('qr-addinfo-display').textContent = `Nội dung CK: TT ${firstCustomer} ${orderList.map(o=>o.id).join(' ')}`;
+
+    // Build VietQR image URL
+    const qrUrl = `https://img.vietqr.io/image/${VIETQR_BANK}-${VIETQR_ACNO}-compact2.png` +
+        `?amount=${Math.round(total)}&addInfo=${addInfo}&accountName=${VIETQR_ACNAME}`;
+    document.getElementById('qr-img').src = qrUrl;
+
+    document.getElementById('qr-modal-overlay').classList.remove('hidden');
+}
+
+function closeQRModal(event) {
+    if (!event || event.target === document.getElementById('qr-modal-overlay')) {
+        document.getElementById('qr-modal-overlay').classList.add('hidden');
+    }
+}
+
+function confirmAndDeliver() {
+    closeQRModal();
+    toggleExtraInputs('delivered');
+    // Auto-fill collected amount = remaining for each selected row
+    selectedRows.forEach(id => {
+        const row = document.querySelector(`tr.bulk-row[data-id="${id}"]`);
+        if (row) {
+            const inp = row.querySelector('.extra-collected');
+            if (inp) inp.value = row.dataset.remaining || 0;
+        }
+    });
+}
+
+// ── Keyboard shortcut: Escape closes modal ────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQRModal(); });
+</script>
+}
