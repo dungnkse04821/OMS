@@ -92,7 +92,7 @@
         </div>
 
         <div class="grid-3">
-            {{/* Nguồn hàng + nút Thêm nhanh */}}
+            @* Nguồn hàng + nút Thêm nhanh *@
             <div class="form-group">
                 <label asp-for="Order.Source" class="form-label"></label>
                 <div style="display:flex;gap:6px;align-items:center;">
@@ -111,7 +111,7 @@
                 <span asp-validation-for="Order.Source" class="text-danger"></span>
             </div>
 
-            {{/* Kho hàng + nút Thêm nhanh */}}
+            @* Kho hàng + nút Thêm nhanh *@
             <div class="form-group">
                 <label asp-for="Order.Warehouse" class="form-label"></label>
                 <div style="display:flex;gap:6px;align-items:center;">
@@ -142,10 +142,11 @@
             </div>
         </div>
 
-        {{/* Auto-create hint */}}
+        @* Auto-create hint *@
         <div style="background:rgba(0,242,254,0.04);border:1px solid rgba(0,242,254,0.12);border-radius:10px;padding:10px 14px;font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">
             💡 <strong>Tự động:</strong> Nếu Khách hàng (theo SĐT) hoặc Sản phẩm (theo Mã SKU) chưa có trong hệ thống, chúng sẽ được tạo tự động khi lưu đơn.
         </div>
+
 
         <!-- 3. Giá & Dòng tiền -->
         <h3 style="color: #00f2fe; margin: 30px 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid rgba(0, 242, 254, 0.2); padding-bottom: 8px;">

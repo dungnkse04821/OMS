@@ -143,7 +143,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
 </style>
 
 <div class="glass-card">
-    {{/* Header */}}
+    @* Header *@
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;">
         <div>
             <h1 class="page-title">⚡ Xử lý hàng loạt</h1>
@@ -161,7 +161,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
         </div>
     }
 
-    {{/* Filter bar */}}
+    @* Filter bar *@
     <form method="get" style="margin-bottom:20px;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
             <div style="flex:2;min-width:200px;">
@@ -202,7 +202,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
             </div>
         </div>
 
-        {{/* Status filter checkboxes */}}
+        @* Status filter checkboxes *@
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center;">
             <span style="color:var(--text-muted);font-size:0.8rem;">Trạng thái:</span>
             @foreach (var st in OMS.Models.OrderStatusList.All)
@@ -229,8 +229,9 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
         </div>
     </form>
 
-    {{/* ── Bulk Action Bar (sticky, shown when rows selected) ── */}}
+    @* ── Bulk Action Bar (sticky, shown when rows selected) ── *@
     <div class="incoming-action-bar hidden" id="action-bar">
+
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;">
             <div style="display:flex;align-items:center;gap:8px;margin-right:8px;">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#00f2fe" style="width:18px;height:18px;">
@@ -267,7 +268,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
             </button>
         </div>
 
-        {{/* Extra inputs panel for "Đã về" mode */}}
+        @* Extra inputs panel for "Đã về" mode *@
         <div id="panel-arrived" style="display:none;width:100%;padding-top:12px;border-top:1px solid var(--border-color);margin-top:10px;">
             <p style="color:var(--text-muted);font-size:0.82rem;margin:0 0 8px 0;">
                 💡 Nhập <strong>Ngày về</strong> và <strong>Giá nhập</strong> cho từng đơn đã chọn bên dưới, sau đó bấm Xác nhận.
@@ -277,7 +278,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
             </button>
         </div>
 
-        {{/* Extra inputs panel for "Đã giao" mode */}}
+        @* Extra inputs panel for "Đã giao" mode *@
         <div id="panel-delivered" style="display:none;width:100%;padding-top:12px;border-top:1px solid var(--border-color);margin-top:10px;">
             <p style="color:var(--text-muted);font-size:0.82rem;margin:0 0 8px 0;">
                 💡 Nhập <strong>Số tiền thu</strong> cho từng đơn đã chọn bên dưới, sau đó bấm Xác nhận.
@@ -288,7 +289,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
         </div>
     </div>
 
-    {{/* ── Hidden bulk form (submitted by JS) ── */}}
+    @* ── Hidden bulk form (submitted by JS) ── *@
     <form id="bulk-form" method="post" asp-page-handler="BulkAction" style="display:none;">
         @Html.AntiForgeryToken()
         <input type="hidden" name="bulkAction" id="bulk-action-input" />
@@ -296,7 +297,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
         <div id="bulk-extra-container"></div>
     </form>
 
-    {{/* ── Table ── */}}
+    @* ── Table ── *@
     @if (!Model.Orders.Any())
     {
         <div style="text-align:center;padding:48px;color:var(--text-muted);">
@@ -325,7 +326,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
                         <th style="text-align:right;">Còn lại</th>
                         <th>Nguồn / Kho</th>
                         <th>Trạng thái</th>
-                        {{/* Extra input columns (hidden by default) */}}
+                        @* Extra input columns (hidden by default) *@
                         <th class="col-extra col-arrived" style="display:none;min-width:140px;">Ngày về</th>
                         <th class="col-extra col-arrived" style="display:none;min-width:140px;">Giá nhập</th>
                         <th class="col-extra col-delivered" style="display:none;min-width:140px;">Tiền thu thêm</th>
@@ -387,7 +388,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
                             </td>
                             <td><span class="status-badge @badge">@order.Status</span></td>
 
-                            {{/* Extra: Arrived inputs */}}
+                            @* Extra: Arrived inputs *@
                             <td class="col-extra col-arrived" style="display:none;">
                                 <div class="row-extra-input">
                                     <input type="date" class="extra-arrival-date" value="@DateTime.Now.ToString("yyyy-MM-dd")"
@@ -401,7 +402,7 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
                                 </div>
                             </td>
 
-                            {{/* Extra: Delivered inputs */}}
+                            @* Extra: Delivered inputs *@
                             <td class="col-extra col-delivered" style="display:none;">
                                 <div class="row-extra-input">
                                     <input type="number" class="extra-collected" value="@order.RemainingAmount"
@@ -419,7 +420,8 @@ tr.bulk-row.selected { background: rgba(0, 242, 254, 0.04); }
     }
 </div>
 
-{{/* ── QR Modal ── */}}
+@* ── QR Modal ── *@
+
 <div class="qr-modal-overlay hidden" id="qr-modal-overlay" onclick="closeQRModal(event)">
     <div class="qr-modal" onclick="event.stopPropagation()">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
