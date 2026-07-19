@@ -2,20 +2,329 @@
 @model OMS.Pages.Customers.IndexModel
 @{
     ViewData["Title"] = "Quản lý Khách hàng";
+
+    string SortLink(string col) =>
+        $"/Customers?SortBy={col}{(string.IsNullOrEmpty(Model.SearchQuery) ? "" : "&SearchQuery=" + Uri.EscapeDataString(Model.SearchQuery))}";
+
+    string SortIcon(string col) =>
+        Model.SortBy == col
+            ? "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='#00f2fe' style='width:13px;height:13px;'><path stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/></svg>"
+            : "<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' style='width:13px;height:13px;opacity:0.35'><path stroke-linecap='round' stroke-linejoin='round' d='M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9'/></svg>";
 }
 
+<style>
+/* ── Customer Dashboard ─────────────────────────────────────── */
+.cust-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.cust-kpi {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px 18px;
+    position: relative; overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.cust-kpi:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.cust-kpi::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--ck, var(--primary));
+    border-radius: 14px 14px 0 0;
+}
+.cust-kpi-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 5px; }
+.cust-kpi-value { font-size: 1.25rem; font-weight: 800; color: var(--ck, var(--text-primary)); line-height: 1.1; }
+.cust-kpi-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+
+/* Debt progress bar */
+.debt-bar-wrap { height: 4px; background: var(--border-color); border-radius: 2px; margin-top: 6px; overflow:hidden; }
+.debt-bar-fill { height: 100%; border-radius: 2px; background: var(--fill-color, var(--primary)); transition: width 0.6s ease; }
+
+/* Sort header link */
+.sort-th a {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: inherit; text-decoration: none; white-space: nowrap;
+}
+.sort-th a:hover { color: #00f2fe; }
+.sort-th.active a { color: #00f2fe; }
+
+/* Debt rank badge */
+.rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 0.72rem; font-weight: 800;
+}
+
+/* Section toggle */
+.section-toggle-btn {
+    background: none; border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 5px 12px;
+    color: var(--text-muted); cursor: pointer;
+    font-size: 0.78rem; display: inline-flex; align-items: center; gap: 5px;
+    transition: all 0.15s;
+}
+.section-toggle-btn:hover { border-color: #00f2fe; color: #00f2fe; }
+</style>
+
 <div class="glass-card">
-    <div class="d-flex justify-content-between align-items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+
+    @* ══════════════════════════════════════════════════════════════ *@
+    @* SECTION 1: FINANCIAL DASHBOARD                                *@
+    @* ══════════════════════════════════════════════════════════════ *@
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
         <div>
-            <h1 class="page-title">Quản lý Khách hàng</h1>
-            <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Danh sách thông tin liên hệ và lịch sử khách hàng</p>
+            <h1 class="page-title" style="margin-bottom:2px;">📊 Dashboard Khách hàng</h1>
+            <p style="color:var(--text-muted);margin:0;font-size:0.87rem;">Tổng hợp tài chính toàn bộ khách hàng</p>
         </div>
-        <a href="/Customers/Create" class="btn-premium">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Thêm khách hàng
-        </a>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <button class="section-toggle-btn" onclick="toggleSection('dash-section','dash-chevron')">
+                <span>Thu gọn</span>
+                <svg id="dash-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;transition:transform 0.2s;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"/>
+                </svg>
+            </button>
+            <a href="/Customers/Create" class="btn-premium" style="padding:9px 16px;font-size:0.875rem;">
+                + Thêm khách
+            </a>
+        </div>
+    </div>
+
+    <div id="dash-section">
+        @* Global KPI Cards *@
+        <div class="cust-kpi-grid">
+            <div class="cust-kpi" style="--ck:#00f2fe;">
+                <div class="cust-kpi-label">Tổng doanh thu</div>
+                <div class="cust-kpi-value">@Model.GlobalRevenue.ToString("N0") ₫</div>
+                <div class="cust-kpi-sub">@Model.Financials.Count KH có đơn / @Model.Customers.Count tổng</div>
+            </div>
+            <div class="cust-kpi" style="--ck:#10b981;">
+                <div class="cust-kpi-label">Đã thu</div>
+                <div class="cust-kpi-value">@Model.GlobalPaid.ToString("N0") ₫</div>
+                <div class="cust-kpi-sub">
+                    @if (Model.GlobalRevenue > 0)
+                    {
+                        <span>@((Model.GlobalPaid / Model.GlobalRevenue * 100).ToString("N0"))% tổng tiền</span>
+                    }
+                </div>
+            </div>
+            <div class="cust-kpi" style="--ck:@(Model.GlobalDebt > 0 ? "#ef4444" : "#10b981");">
+                <div class="cust-kpi-label">Tổng còn nợ</div>
+                <div class="cust-kpi-value">
+                    @if (Model.GlobalDebt > 0) { @Model.GlobalDebt.ToString("N0") <text> ₫</text> }
+                    else { <text>✓ Không nợ</text> }
+                </div>
+                <div class="cust-kpi-sub">@Model.CustomersInDebt KH còn nợ</div>
+            </div>
+            <div class="cust-kpi" style="--ck:#a78bfa;">
+                <div class="cust-kpi-label">Tổng đơn hàng</div>
+                <div class="cust-kpi-value">@Model.TotalOrderCount</div>
+                <div class="cust-kpi-sub">Trung bình @(Model.Financials.Count > 0 ? (Model.TotalOrderCount / (double)Model.Financials.Count).ToString("N1") : "0") đơn/KH</div>
+            </div>
+            <div class="cust-kpi" style="--ck:#f59e0b;">
+                <div class="cust-kpi-label">KH tích cực</div>
+                <div class="cust-kpi-value">@Model.Financials.Count(f => f.ActiveOrders > 0)</div>
+                <div class="cust-kpi-sub">Đang có đơn chưa giao</div>
+            </div>
+        </div>
+
+        @* Top debtors — mini highlight *@
+        @if (Model.GlobalDebt > 0)
+        {
+            var topDebtors = Model.Financials.Where(f => f.TotalDebt > 0).Take(3).ToList();
+            <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;">
+                <div style="font-size:0.82rem;color:#ef4444;font-weight:700;margin-bottom:10px;">🔴 Top khách nợ nhiều nhất</div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    @for (int i = 0; i < topDebtors.Count; i++)
+                    {
+                        var f = topDebtors[i];
+                        string[] medalColors = { "#f59e0b", "#94a3b8", "#b45309" };
+                        <a href="/Customers/Detail?id=@f.Customer.Id"
+                           style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-card);border:1px solid rgba(239,68,68,0.2);border-radius:10px;text-decoration:none;flex:1;min-width:200px;transition:transform 0.15s;"
+                           onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                            <div class="rank-badge" style="background:@medalColors[i]20;color:@medalColors[i];border:1px solid @medalColors[i]40;">@(i + 1)</div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:700;font-size:0.87rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@f.Customer.FullName</div>
+                                <div style="font-size:0.75rem;color:var(--text-muted);">@f.Customer.PhoneNumber</div>
+                            </div>
+                            <div style="text-align:right;flex-shrink:0;">
+                                <div style="font-weight:800;color:#ef4444;font-size:0.9rem;">@f.TotalDebt.ToString("N0") ₫</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">@f.TotalOrders đơn</div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
+        @* Financial Summary Table *@
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <h2 style="font-size:0.95rem;font-weight:700;margin:0;color:var(--text-primary);">
+                💼 Bảng tổng hợp tài chính
+                <span style="font-weight:400;color:var(--text-muted);font-size:0.82rem;margin-left:6px;">
+                    (@Model.Financials.Count khách hàng có đơn hàng)
+                </span>
+            </h2>
+            <div style="display:flex;gap:6px;align-items:center;font-size:0.78rem;color:var(--text-muted);">
+                <span>Sắp xếp theo:</span>
+                @{
+                    var sorts = new[] {
+                        ("debt",    "Nợ nhiều"),
+                        ("revenue", "Doanh thu"),
+                        ("paid",    "Đã trả"),
+                        ("orders",  "Số đơn"),
+                        ("name",    "Tên A-Z"),
+                    };
+                }
+                @foreach (var (key, label) in sorts)
+                {
+                    <a href="@SortLink(key)"
+                       style="padding:4px 10px;border-radius:6px;text-decoration:none;font-weight:@(Model.SortBy == key ? "700" : "400");
+                              background:@(Model.SortBy == key ? "rgba(0,242,254,0.12)" : "transparent");
+                              color:@(Model.SortBy == key ? "#00f2fe" : "var(--text-muted)");
+                              border:1px solid @(Model.SortBy == key ? "rgba(0,242,254,0.3)" : "transparent");
+                              transition:all 0.15s;"
+                       onmouseover="this.style.color='#00f2fe'" onmouseout="if('@(Model.SortBy)'!='@key') this.style.color='var(--text-muted)'">
+                        @label
+                    </a>
+                }
+            </div>
+        </div>
+
+        @if (!Model.Financials.Any())
+        {
+            <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.9rem;">
+                Chưa có khách hàng nào có đơn hàng để hiển thị.
+            </div>
+        }
+        else
+        {
+            @* Max values for progress bar scaling *@
+            var maxDebt    = Model.Financials.Max(f => f.TotalDebt);
+            var maxRevenue = Model.Financials.Max(f => f.TotalRevenue);
+
+            <div class="table-responsive" style="margin-bottom:8px;">
+                <table class="custom-table" style="font-size:0.85rem;">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">#</th>
+                            <th class="sort-th @(Model.SortBy == "name" ? "active" : "")">
+                                <a href="@SortLink("name")">Khách hàng @Html.Raw(SortIcon("name"))</a>
+                            </th>
+                            <th class="sort-th @(Model.SortBy == "orders" ? "active" : "")" style="text-align:center;">
+                                <a href="@SortLink("orders")">Đơn @Html.Raw(SortIcon("orders"))</a>
+                            </th>
+                            <th class="sort-th @(Model.SortBy == "revenue" ? "active" : "")" style="text-align:right;">
+                                <a href="@SortLink("revenue")">Tổng mua @Html.Raw(SortIcon("revenue"))</a>
+                            </th>
+                            <th class="sort-th @(Model.SortBy == "paid" ? "active" : "")" style="text-align:right;">
+                                <a href="@SortLink("paid")">Đã trả @Html.Raw(SortIcon("paid"))</a>
+                            </th>
+                            <th style="text-align:right;">CK</th>
+                            <th class="sort-th @(Model.SortBy == "debt" ? "active" : "")" style="min-width:160px;">
+                                <a href="@SortLink("debt")">Còn nợ @Html.Raw(SortIcon("debt"))</a>
+                            </th>
+                            <th style="text-align:center;">Đang xử lý</th>
+                            <th style="text-align:center;">Đặt gần nhất</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Financials.Count; i++)
+                        {
+                            var f = Model.Financials[i];
+                            bool hasDebt     = f.TotalDebt > 0;
+                            decimal paidPct  = f.TotalRevenue > 0 ? f.TotalPaid / f.TotalRevenue * 100 : 100;
+                            decimal debtPct  = maxDebt > 0 ? f.TotalDebt / maxDebt * 100 : 0;
+
+                            <tr>
+                                <td style="color:var(--text-muted);font-size:0.75rem;text-align:center;">@(i + 1)</td>
+                                <td>
+                                    <a href="/Customers/Detail?id=@f.Customer.Id" style="text-decoration:none;">
+                                        <div style="font-weight:700;color:var(--text-primary);font-size:0.87rem;">@f.Customer.FullName</div>
+                                        <div style="font-size:0.75rem;color:var(--text-muted);">@f.Customer.PhoneNumber</div>
+                                    </a>
+                                </td>
+                                <td style="text-align:center;font-weight:600;">@f.TotalOrders</td>
+                                <td style="text-align:right;font-weight:600;color:#00f2fe;">@f.TotalRevenue.ToString("N0") ₫</td>
+                                <td style="text-align:right;color:#10b981;">
+                                    @f.TotalPaid.ToString("N0") ₫
+                                    <div style="font-size:0.7rem;color:var(--text-muted);">@paidPct.ToString("N0")%</div>
+                                </td>
+                                <td style="text-align:right;color:var(--text-muted);font-size:0.82rem;">
+                                    @(f.TotalDiscount > 0 ? f.TotalDiscount.ToString("N0") + " ₫" : "—")
+                                </td>
+                                <td>
+                                    @if (hasDebt)
+                                    {
+                                        <div style="font-weight:700;color:#ef4444;font-size:0.87rem;margin-bottom:3px;">
+                                            @f.TotalDebt.ToString("N0") ₫
+                                        </div>
+                                        <div class="debt-bar-wrap">
+                                            <div class="debt-bar-fill" style="width:@debtPct.ToString("N0")%;--fill-color:#ef4444;"></div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#10b981;font-size:0.82rem;">✓ Sạch nợ</span>
+                                    }
+                                </td>
+                                <td style="text-align:center;">
+                                    @if (f.ActiveOrders > 0)
+                                    {
+                                        <span style="background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 8px;border-radius:6px;font-size:0.78rem;font-weight:600;">
+                                            @f.ActiveOrders đơn
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--text-muted);font-size:0.78rem;">—</span>
+                                    }
+                                </td>
+                                <td style="text-align:center;color:var(--text-muted);font-size:0.8rem;white-space:nowrap;">
+                                    @(f.LastOrderDate?.ToString("dd/MM/yy") ?? "—")
+                                </td>
+                                <td>
+                                    <a href="/Customers/Detail?id=@f.Customer.Id" class="action-btn" title="Chi tiết" style="color:#00f2fe;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    @* Footer totals *@
+                    <tfoot>
+                        <tr style="font-weight:700;background:rgba(0,242,254,0.04);border-top:2px solid rgba(0,242,254,0.15);">
+                            <td colspan="3" style="color:var(--text-muted);font-size:0.8rem;">Tổng cộng</td>
+                            <td style="text-align:right;color:#00f2fe;">@Model.GlobalRevenue.ToString("N0") ₫</td>
+                            <td style="text-align:right;color:#10b981;">@Model.GlobalPaid.ToString("N0") ₫</td>
+                            <td style="text-align:right;color:var(--text-muted);">@Model.Financials.Sum(f => f.TotalDiscount).ToString("N0") ₫</td>
+                            <td style="color:@(Model.GlobalDebt > 0 ? "#ef4444" : "#10b981");font-size:0.87rem;">
+                                @(Model.GlobalDebt > 0 ? Model.GlobalDebt.ToString("N0") + " ₫" : "✓ Không có nợ")
+                            </td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border-color);margin:28px 0;" />
+
+    @* ══════════════════════════════════════════════════════════════ *@
+    @* SECTION 2: CRUD TABLE (existing)                              *@
+    @* ══════════════════════════════════════════════════════════════ *@
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <div>
+            <h2 style="font-size:1rem;font-weight:700;margin:0;">👥 Danh sách khách hàng</h2>
+            <p style="color:var(--text-muted);margin:0;font-size:0.85rem;">Thêm, sửa, xóa thông tin liên hệ</p>
+        </div>
     </div>
 
     <!-- Filter & Search Bar -->
@@ -173,3 +482,20 @@
         .d-md-none { display: flex !important; }
     }
 </style>
+
+@section Scripts {
+<script>
+function toggleSection(sectionId, chevronId) {
+    const section = document.getElementById(sectionId);
+    const chevron = document.getElementById(chevronId);
+    const btn     = chevron?.closest('button');
+    const label   = btn?.querySelector('span');
+
+    if (!section) return;
+    const isVisible = section.style.display !== 'none';
+    section.style.display = isVisible ? 'none' : '';
+    if (chevron) chevron.style.transform = isVisible ? 'rotate(180deg)' : '';
+    if (label)   label.textContent = isVisible ? 'Mở rộng' : 'Thu gọn';
+}
+</script>
+}
