@@ -1,0 +1,468 @@
+@page
+@model OMS.Pages.Reports.WarehouseSourceModel
+@{
+    ViewData["Title"] = "Báo cáo Kho / Nguồn hàng";
+
+    // Build a filter URL preserving Tab
+    string FilterUrl(string fromDate, string toDate) =>
+        $"/Reports/WarehouseSource?Tab={Model.Tab}&FromDate={Uri.EscapeDataString(fromDate)}&ToDate={Uri.EscapeDataString(toDate)}";
+}
+
+<style>
+/* ── WarehouseSource Report Styles ─────────────────────────────── */
+.rpt-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.rpt-kpi {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px 18px;
+    position: relative; overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.rpt-kpi:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.rpt-kpi::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--rk, var(--primary));
+    border-radius: 14px 14px 0 0;
+}
+.rpt-kpi-label { font-size: 0.71rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 5px; }
+.rpt-kpi-value { font-size: 1.2rem; font-weight: 800; color: var(--rk, var(--text-primary)); line-height: 1.1; }
+.rpt-kpi-sub   { font-size: 0.71rem; color: var(--text-muted); margin-top: 3px; }
+
+/* Tab nav */
+.rpt-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+.rpt-tab {
+    padding: 8px 18px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: transparent; color: var(--text-muted);
+    font-size: 0.87rem; font-weight: 500; transition: all 0.15s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.rpt-tab:hover  { border-color: #00f2fe; color: #00f2fe; }
+.rpt-tab.active { background: rgba(0,242,254,0.1); border-color: rgba(0,242,254,0.4); color: #00f2fe; font-weight: 700; }
+
+/* Chart containers */
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+@@media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 18px 20px;
+}
+.chart-title { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+
+/* Metric bar */
+.metric-bar-wrap { height: 6px; background: var(--border-color); border-radius: 3px; margin-top: 5px; overflow:hidden; }
+.metric-bar-fill { height:100%; border-radius:3px; transition: width 0.6s ease; }
+
+/* Quick-range pills */
+.quick-ranges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.quick-pill {
+    padding: 4px 12px; border-radius: 20px; cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: transparent; color: var(--text-muted);
+    font-size: 0.78rem; white-space: nowrap;
+    text-decoration: none; transition: all 0.15s;
+}
+.quick-pill:hover { border-color: #00f2fe; color: #00f2fe; }
+
+/* Status mini-badges */
+.mini-badge {
+    display: inline-block; padding: 1px 7px; border-radius: 4px;
+    font-size: 0.72rem; font-weight: 600;
+}
+
+/* Table sticky col */
+.dim-table th:first-child,
+.dim-table td:first-child {
+    position: sticky; left: 0;
+    background: var(--bg-card);
+    z-index: 1;
+}
+</style>
+
+<div class="glass-card">
+
+    @* ── Header ── *@
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;">
+        <div>
+            <h1 class="page-title" style="margin-bottom:2px;">🏭 Báo cáo Kho / Nguồn hàng</h1>
+            <p style="color:var(--text-muted);margin:0;font-size:0.87rem;">
+                Thống kê đơn hàng, vốn nhập, doanh thu, lợi nhuận theo từng nguồn và kho
+            </p>
+        </div>
+        <a href="/Reports" style="display:inline-flex;align-items:center;gap:5px;color:var(--text-muted);font-size:0.85rem;text-decoration:none;"
+           onmouseover="this.style.color='#00f2fe'" onmouseout="this.style.color=''">
+            ← Báo cáo tổng quan
+        </a>
+    </div>
+
+    @* ── Date filter ── *@
+    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px 18px;margin-bottom:20px;">
+        <div style="font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-bottom:10px;">📅 Khoảng thời gian</div>
+
+        @* Quick-range pills *@
+        @{
+            var now   = DateTime.Now;
+            var pills = new[]
+            {
+                ("Tháng này",       new DateTime(now.Year, now.Month, 1).ToString("yyyy-MM-dd"),   now.ToString("yyyy-MM-dd")),
+                ("Tháng trước",     new DateTime(now.Year, now.Month, 1).AddMonths(-1).ToString("yyyy-MM-dd"),
+                                    new DateTime(now.Year, now.Month, 1).AddDays(-1).ToString("yyyy-MM-dd")),
+                ("Quý này",         new DateTime(now.Year, (int)Math.Ceiling(now.Month/3.0)*3-2, 1).ToString("yyyy-MM-dd"),
+                                    now.ToString("yyyy-MM-dd")),
+                ("6 tháng",         now.AddMonths(-5).ToString("yyyy-MM") + "-01", now.ToString("yyyy-MM-dd")),
+                ("Năm nay",         new DateTime(now.Year, 1, 1).ToString("yyyy-MM-dd"),  now.ToString("yyyy-MM-dd")),
+            };
+        }
+        <div class="quick-ranges">
+            @foreach (var (label, from, to) in pills)
+            {
+                bool active = Model.FromDate == from && Model.ToDate == to;
+                <a href="@FilterUrl(from, to)" class="quick-pill" style="@(active ? "border-color:#00f2fe;color:#00f2fe;background:rgba(0,242,254,0.08);" : "")">@label</a>
+            }
+        </div>
+
+        <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <input type="hidden" name="Tab" value="@Model.Tab" />
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">Từ ngày</label>
+                <input type="date" name="FromDate" value="@Model.FromDate" class="form-input" style="width:160px;" />
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">Đến ngày</label>
+                <input type="date" name="ToDate" value="@Model.ToDate" class="form-input" style="width:160px;" />
+            </div>
+            <button type="submit" class="btn-premium" style="padding:10px 18px;">Xem báo cáo</button>
+        </form>
+        <div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">
+            Đang xem: <strong style="color:#00f2fe;">@Model.DisplayRange</strong>
+            — <strong>@Model.TotalOrders</strong> đơn hàng
+        </div>
+    </div>
+
+    @* ── Global KPI Cards ── *@
+    <div class="rpt-kpi-grid">
+        <div class="rpt-kpi" style="--rk:#00f2fe;">
+            <div class="rpt-kpi-label">Doanh thu</div>
+            <div class="rpt-kpi-value">@Model.TotalRevenue.ToString("N0") ₫</div>
+            <div class="rpt-kpi-sub">@Model.TotalOrders đơn hàng</div>
+        </div>
+        <div class="rpt-kpi" style="--rk:#a78bfa;">
+            <div class="rpt-kpi-label">Vốn nhập</div>
+            <div class="rpt-kpi-value">@Model.TotalCost.ToString("N0") ₫</div>
+            <div class="rpt-kpi-sub">
+                @if (Model.TotalRevenue > 0)
+                { <span>@((Model.TotalCost / Model.TotalRevenue * 100).ToString("N0"))% doanh thu</span> }
+            </div>
+        </div>
+        <div class="rpt-kpi" style="--rk:#10b981;">
+            <div class="rpt-kpi-label">Lợi nhuận</div>
+            <div class="rpt-kpi-value">@Model.TotalProfit.ToString("N0") ₫</div>
+            <div class="rpt-kpi-sub">
+                Margin @(Model.TotalRevenue > 0 ? (Model.TotalProfit / Model.TotalRevenue * 100).ToString("N0") : "0")%
+            </div>
+        </div>
+        <div class="rpt-kpi" style="--rk:@(Model.TotalDebt > 0 ? "#ef4444" : "#10b981");">
+            <div class="rpt-kpi-label">Còn nợ</div>
+            <div class="rpt-kpi-value">
+                @(Model.TotalDebt > 0 ? Model.TotalDebt.ToString("N0") + " ₫" : "✓ Sạch nợ")
+            </div>
+            <div class="rpt-kpi-sub">Tổng chưa thu hồi</div>
+        </div>
+        <div class="rpt-kpi" style="--rk:#f59e0b;">
+            <div class="rpt-kpi-label">Nguồn hàng</div>
+            <div class="rpt-kpi-value">@Model.SourceStats.Count</div>
+            <div class="rpt-kpi-sub">Kho: @Model.WarehouseStats.Count kho</div>
+        </div>
+    </div>
+
+    @* ── Chart section ── *@
+    <div style="margin-bottom:24px;">
+        <div class="chart-title" style="margin-bottom:14px;">📈 Xu hướng 6 tháng theo Nguồn hàng</div>
+        <div class="chart-card" style="grid-column:span 2;">
+            <canvas id="trendChart" style="max-height:220px;"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-grid" style="margin-bottom:28px;">
+        <div class="chart-card">
+            <div class="chart-title">Doanh thu theo Nguồn hàng</div>
+            <canvas id="sourceBarChart" style="max-height:220px;"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Doanh thu theo Kho</div>
+            <canvas id="whBarChart" style="max-height:220px;"></canvas>
+        </div>
+    </div>
+
+    @* ── Tab nav ── *@
+    <div class="rpt-tabs">
+        <a href="/Reports/WarehouseSource?Tab=source&FromDate=@Uri.EscapeDataString(Model.FromDate ?? "")&ToDate=@Uri.EscapeDataString(Model.ToDate ?? "")"
+           class="rpt-tab @(Model.Tab == "source" ? "active" : "")">
+            🌐 Theo Nguồn hàng
+            <span style="background:rgba(0,242,254,0.15);color:#00f2fe;padding:1px 7px;border-radius:4px;font-size:0.75rem;">@Model.SourceStats.Count</span>
+        </a>
+        <a href="/Reports/WarehouseSource?Tab=warehouse&FromDate=@Uri.EscapeDataString(Model.FromDate ?? "")&ToDate=@Uri.EscapeDataString(Model.ToDate ?? "")"
+           class="rpt-tab @(Model.Tab == "warehouse" ? "active" : "")">
+            🏭 Theo Kho hàng
+            <span style="background:rgba(167,139,250,0.15);color:#a78bfa;padding:1px 7px;border-radius:4px;font-size:0.75rem;">@Model.WarehouseStats.Count</span>
+        </a>
+    </div>
+
+    @* ── Stat table ── *@
+    @{
+        var stats     = Model.Tab == "warehouse" ? Model.WarehouseStats : Model.SourceStats;
+        var maxRevenue= stats.Count > 0 ? stats.Max(s => s.TotalRevenue) : 1;
+        var maxCost   = stats.Count > 0 ? stats.Max(s => s.TotalCost)    : 1;
+        var accentColor = Model.Tab == "warehouse" ? "#a78bfa" : "#00f2fe";
+    }
+
+    @if (!stats.Any())
+    {
+        <div style="text-align:center;padding:40px;color:var(--text-muted);">
+            Không có dữ liệu trong khoảng thời gian này.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="custom-table dim-table" style="font-size:0.84rem;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@(Model.Tab == "warehouse" ? "Kho hàng" : "Nguồn hàng")</th>
+                        <th style="text-align:center;">Đơn</th>
+                        <th style="text-align:center;">Giao / Hủy / Đang xử</th>
+                        <th style="text-align:right;">SL bán</th>
+                        <th style="min-width:170px;">Doanh thu</th>
+                        <th style="min-width:160px;">Vốn nhập</th>
+                        <th style="text-align:right;">Lợi nhuận</th>
+                        <th style="text-align:right;">Margin</th>
+                        <th style="text-align:right;">Đã thu</th>
+                        <th style="text-align:right;">Còn nợ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < stats.Count; i++)
+                    {
+                        var s = stats[i];
+                        decimal revPct  = maxRevenue > 0 ? s.TotalRevenue / maxRevenue * 100 : 0;
+                        decimal costPct = maxCost    > 0 ? s.TotalCost    / maxCost    * 100 : 0;
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:0.72rem;text-align:center;">@(i+1)</td>
+                            <td style="font-weight:700;color:@accentColor;min-width:130px;">@s.Name</td>
+                            <td style="text-align:center;font-weight:600;">@s.OrderCount</td>
+                            <td style="text-align:center;">
+                                <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+                                    @if (s.DeliveredCount > 0)
+                                    { <span class="mini-badge" style="background:rgba(16,185,129,0.15);color:#10b981;">✓ @s.DeliveredCount</span> }
+                                    @if (s.CancelledCount > 0)
+                                    { <span class="mini-badge" style="background:rgba(239,68,68,0.12);color:#ef4444;">✕ @s.CancelledCount</span> }
+                                    @if (s.ActiveOrders > 0)
+                                    { <span class="mini-badge" style="background:rgba(245,158,11,0.12);color:#f59e0b;">⏳ @s.ActiveOrders</span> }
+                                </div>
+                            </td>
+                            <td style="text-align:right;">@s.TotalQty</td>
+                            <td>
+                                <div style="font-weight:600;color:@accentColor;font-size:0.85rem;">@s.TotalRevenue.ToString("N0") ₫</div>
+                                <div class="metric-bar-wrap">
+                                    <div class="metric-bar-fill" style="width:@revPct.ToString("N0")%;background:@accentColor;"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="color:#a78bfa;font-size:0.85rem;">@s.TotalCost.ToString("N0") ₫</div>
+                                <div class="metric-bar-wrap">
+                                    <div class="metric-bar-fill" style="width:@costPct.ToString("N0")%;background:#a78bfa;"></div>
+                                </div>
+                            </td>
+                            <td style="text-align:right;font-weight:700;color:@(s.TotalProfit >= 0 ? "#10b981" : "#ef4444");">
+                                @s.TotalProfit.ToString("N0") ₫
+                            </td>
+                            <td style="text-align:right;font-size:0.82rem;">
+                                <span style="color:@(s.MarginPct >= 20 ? "#10b981" : s.MarginPct >= 0 ? "#f59e0b" : "#ef4444");">
+                                    @s.MarginPct.ToString("N1")%
+                                </span>
+                            </td>
+                            <td style="text-align:right;color:#10b981;font-size:0.82rem;">@s.TotalPaid.ToString("N0") ₫</td>
+                            <td style="text-align:right;font-size:0.82rem;color:@(s.TotalDebt > 0 ? "#ef4444" : "#10b981");">
+                                @(s.TotalDebt > 0 ? s.TotalDebt.ToString("N0") + " ₫" : "✓")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                @* Footer *@
+                <tfoot>
+                    <tr style="font-weight:700;background:rgba(0,242,254,0.04);border-top:2px solid rgba(0,242,254,0.15);">
+                        <td colspan="4" style="color:var(--text-muted);font-size:0.78rem;">Tổng cộng</td>
+                        <td style="text-align:right;">@stats.Sum(s => s.TotalQty)</td>
+                        <td style="color:#00f2fe;">@Model.TotalRevenue.ToString("N0") ₫</td>
+                        <td style="color:#a78bfa;">@Model.TotalCost.ToString("N0") ₫</td>
+                        <td style="text-align:right;color:#10b981;">@Model.TotalProfit.ToString("N0") ₫</td>
+                        <td style="text-align:right;font-size:0.82rem;">
+                            @(Model.TotalRevenue > 0 ? (Model.TotalProfit / Model.TotalRevenue * 100).ToString("N1") : "0")%
+                        </td>
+                        <td style="text-align:right;color:#10b981;">@stats.Sum(s => s.TotalPaid).ToString("N0") ₫</td>
+                        <td style="text-align:right;color:@(Model.TotalDebt > 0 ? "#ef4444" : "#10b981");">
+                            @(Model.TotalDebt > 0 ? Model.TotalDebt.ToString("N0") + " ₫" : "✓")
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        @* ── Per-source donut charts row ── *@
+        @if (stats.Count >= 2)
+        {
+            <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px 18px;">
+                <div class="chart-title" style="margin-bottom:14px;">
+                    🍩 Phân bổ doanh thu — @(Model.Tab == "warehouse" ? "Kho hàng" : "Nguồn hàng")
+                </div>
+                <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+                    <div style="position:relative;width:200px;height:200px;flex-shrink:0;">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        @{
+                            string[] donutPalette = { "#00f2fe","#10b981","#a78bfa","#f59e0b","#ef4444","#38bdf8","#fb923c" };
+                        }
+                        @for (int i = 0; i < stats.Count; i++)
+                        {
+                            var s   = stats[i];
+                            var pct = Model.TotalRevenue > 0 ? (double)(s.TotalRevenue / Model.TotalRevenue * 100) : 0;
+                            var col = donutPalette[i % donutPalette.Length];
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                                <div style="width:10px;height:10px;border-radius:50%;background:@col;flex-shrink:0;"></div>
+                                <span style="flex:1;font-size:0.83rem;font-weight:600;">@s.Name</span>
+                                <span style="font-size:0.82rem;color:@col;font-weight:700;">@pct.ToString("N1")%</span>
+                                <span style="font-size:0.78rem;color:var(--text-muted);">@s.TotalRevenue.ToString("N0") ₫</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.color = 'rgba(255,255,255,0.5)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+
+const fmtVnd = v => new Intl.NumberFormat('vi-VN').format(Math.round(v)) + ' ₫';
+
+// ── 1. Trend chart (line) ────────────────────────────────────────
+const trendLabels   = @Html.Raw(Model.TrendLabelsJson);
+const trendDatasets = @Html.Raw(Model.TrendDatasetsJson);
+
+if (trendLabels.length && document.getElementById('trendChart')) {
+    new Chart(document.getElementById('trendChart').getContext('2d'), {
+        type: 'line',
+        data: { labels: trendLabels, datasets: trendDatasets },
+        options: {
+            responsive: true, maintainAspectRatio: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14, font: { size: 11 } } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVnd(ctx.raw)}` } }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmtVnd(v) } }
+            }
+        }
+    });
+}
+
+// ── 2. Source bar chart ─────────────────────────────────────────
+const srcLabels  = @Html.Raw(Model.SourceLabelsJson);
+const srcRevenue = @Html.Raw(Model.SourceRevenueJson);
+const srcProfit  = @Html.Raw(Model.SourceProfitJson);
+const srcOrders  = @Html.Raw(Model.SourceOrdersJson);
+
+if (srcLabels.length && document.getElementById('sourceBarChart')) {
+    new Chart(document.getElementById('sourceBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: srcLabels,
+            datasets: [
+                { label: 'Doanh thu', data: srcRevenue, backgroundColor: 'rgba(0,242,254,0.65)', borderRadius: 5 },
+                { label: 'Lợi nhuận', data: srcProfit,  backgroundColor: 'rgba(16,185,129,0.65)', borderRadius: 5 },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth:10, padding:10, font:{size:11} } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVnd(ctx.raw)}` } }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color:'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmtVnd(v) } }
+            }
+        }
+    });
+}
+
+// ── 3. Warehouse bar chart ──────────────────────────────────────
+const whLabels  = @Html.Raw(Model.WhLabelsJson);
+const whRevenue = @Html.Raw(Model.WhRevenueJson);
+const whProfit  = @Html.Raw(Model.WhProfitJson);
+
+if (whLabels.length && document.getElementById('whBarChart')) {
+    new Chart(document.getElementById('whBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: whLabels,
+            datasets: [
+                { label: 'Doanh thu', data: whRevenue, backgroundColor: 'rgba(167,139,250,0.65)', borderRadius: 5 },
+                { label: 'Lợi nhuận', data: whProfit,  backgroundColor: 'rgba(16,185,129,0.65)',  borderRadius: 5 },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth:10, padding:10, font:{size:11} } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtVnd(ctx.raw)}` } }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color:'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmtVnd(v) } }
+            }
+        }
+    });
+}
+
+// ── 4. Donut chart ─────────────────────────────────────────────
+const donutLabels  = @Html.Raw(Model.Tab == "warehouse" ? Model.WhLabelsJson  : Model.SourceLabelsJson);
+const donutRevenue = @Html.Raw(Model.Tab == "warehouse" ? Model.WhRevenueJson : Model.SourceRevenueJson);
+const donutPalette = ['#00f2fe','#10b981','#a78bfa','#f59e0b','#ef4444','#38bdf8','#fb923c'];
+
+if (donutLabels.length >= 2 && document.getElementById('donutChart')) {
+    new Chart(document.getElementById('donutChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: donutLabels,
+            datasets: [{ data: donutRevenue, backgroundColor: donutPalette.slice(0, donutLabels.length), borderWidth: 2, borderColor: '#0d111e' }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: true, cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtVnd(ctx.raw)}` } }
+            }
+        }
+    });
+}
+</script>
+}
